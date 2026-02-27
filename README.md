@@ -20,6 +20,31 @@ Browser extension that dramatically speeds up ChatGPT by lazily loading conversa
 
 Each browser has its own manifest under `browsers/`. The TypeScript source code is shared.
 
+
+### Loading the Extension
+
+**Chrome / Edge:**
+1. Navigate to `chrome://extensions` (or `edge://extensions`)
+2. Enable "Developer mode"
+3. Click "Load unpacked"
+4. Select `dist/chrome/` (or `dist/edge/`)
+
+**Firefox:**
+1. Navigate to `about:debugging#/runtime/this-firefox`
+2. Click "Load Temporary Add-on…"
+3. Select `dist/firefox/manifest.json`
+
+## Configuration
+
+Open the extension popup to adjust:
+
+| Setting | Default | Range | Description |
+|---------|---------|-------|-------------|
+| Visible messages | 10 | 1–200 | Max messages shown at a time |
+| Load-more batch | 5 | 1–50 | Messages revealed per "Load More" click |
+
+
+
 ## Project Structure
 
 ```
