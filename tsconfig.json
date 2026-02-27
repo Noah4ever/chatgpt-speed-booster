@@ -8,6 +8,9 @@
             "DOM",
             "DOM.Iterable"
         ],
+        "types": [
+            "chrome"
+        ],
         "strict": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
@@ -20,22 +23,7 @@
         "declaration": false,
         "sourceMap": true,
         "outDir": "./dist",
-        "rootDir": "./src",
-        "baseUrl": ".",
-        "paths": {
-            "@shared/*": [
-                "src/shared/*"
-            ],
-            "@content/*": [
-                "src/content/*"
-            ],
-            "@background/*": [
-                "src/background/*"
-            ],
-            "@popup/*": [
-                "src/popup/*"
-            ]
-        }
+        "rootDir": "./src"
     },
     "include": [
         "src/**/*.ts"

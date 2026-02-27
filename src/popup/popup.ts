@@ -69,7 +69,7 @@ saveBtn.addEventListener("click", async () => {
     setTimeout(() => {
         saveBtn.textContent = originalText;
         saveBtn.disabled = false;
-    }, 1200);
+    }, 800);
 
     await refreshStatus();
 });
