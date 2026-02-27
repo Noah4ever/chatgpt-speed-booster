@@ -16,6 +16,7 @@ Browser extension that dramatically speeds up ChatGPT by lazily loading conversa
 | Chrome  | V3       | ✅ Supported |
 | Firefox | V3       | ✅ Supported |
 | Edge    | V3       | ✅ Supported |
+| Safari  | V3       | ✅ Supported |
 
 Each browser has its own manifest under `browsers/`. The TypeScript source code is shared.
 
@@ -34,6 +35,7 @@ src/
 │   ├── MessageManager.ts# FIFO visibility manager
 │   ├── DOMObserver.ts   # MutationObserver wrapper
 │   ├── UIComponents.ts  # Load More button & status indicator
+│   ├── icons.ts         # Inline SVG icons
 │   └── selectors.ts     # ChatGPT DOM selectors
 ├── background/          # Service worker
 │   └── index.ts         # Config relay & tab messaging
@@ -45,7 +47,12 @@ src/
 browsers/
 ├── chrome/manifest.json
 ├── firefox/manifest.json
-└── edge/manifest.json
+├── edge/manifest.json
+└── safari/manifest.json
+
+assets/
+├── icons/               # Extension icons (SVG + PNG)
+└── svg/                 # UI icons used inline
 ```
 
 ## Development
@@ -68,12 +75,14 @@ npm install
 npm run build:chrome
 npm run build:firefox
 npm run build:edge
+npm run build:safari
 
 # Build for all browsers at once
 npm run build:all
 
 # Watch mode (development)
 npm run watch:chrome
+npm run watch:safari
 ```
 
 Output is written to `dist/<browser>/`.
@@ -96,6 +105,11 @@ npm run typecheck
 1. Navigate to `about:debugging#/runtime/this-firefox`
 2. Click "Load Temporary Add-on…"
 3. Select `dist/firefox/manifest.json`
+
+**Safari:**
+1. Enable the Develop menu in Safari preferences
+2. Run `xcrun safari-web-extension-converter dist/safari/`
+3. Build the generated Xcode project and enable the extension in Safari preferences
 
 ## Configuration
 
