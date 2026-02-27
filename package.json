@@ -1,0 +1,29 @@
+{
+    "name": "chatgpt-speed-booster",
+    "version": "1.0.0",
+    "description": "Browser extension that speeds up ChatGPT by lazily loading conversation messages with FIFO management",
+    "private": true,
+    "scripts": {
+        "build": "node scripts/build.mjs",
+        "build:chrome": "TARGET_BROWSER=chrome node scripts/build.mjs",
+        "build:firefox": "TARGET_BROWSER=firefox node scripts/build.mjs",
+        "build:edge": "TARGET_BROWSER=edge node scripts/build.mjs",
+        "build:safari": "TARGET_BROWSER=safari node scripts/build.mjs",
+        "build:all": "node scripts/build.mjs --all",
+        "watch:chrome": "TARGET_BROWSER=chrome node scripts/build.mjs --watch",
+        "watch:firefox": "TARGET_BROWSER=firefox node scripts/build.mjs --watch",
+        "watch:safari": "TARGET_BROWSER=safari node scripts/build.mjs --watch",
+        "clean": "rm -rf dist",
+        "lint": "eslint src --ext .ts",
+        "typecheck": "tsc --noEmit"
+    },
+    "devDependencies": {
+        "@types/chrome": "^0.0.268",
+        "esbuild": "^0.21.0",
+        "typescript": "^5.4.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "license": "MIT"
+}

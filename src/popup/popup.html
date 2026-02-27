@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT Speed Booster</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+    <div class="popup">
+        <!-- Header -->
+        <header class="popup-header">
+            <div class="popup-header__title-row">
+                <h1 class="popup-header__title">Speed Booster</h1>
+                <label class="toggle" aria-label="Enable or disable extension">
+                    <input type="checkbox" id="toggle-enabled" class="toggle__input">
+                    <span class="toggle__slider"></span>
+                </label>
+            </div>
+            <p class="popup-header__subtitle" id="status-text">Loading…</p>
+        </header>
+
+        <!-- Settings -->
+        <section class="popup-settings" aria-label="Settings">
+            <div class="setting">
+                <label class="setting__label" for="visible-limit">
+                    Visible messages
+                    <span class="setting__hint">How many messages to show at a time</span>
+                </label>
+                <input type="number" id="visible-limit" class="setting__input" min="1" max="200" step="1">
+            </div>
+            <div class="setting">
+                <label class="setting__label" for="batch-size">
+                    Load-more batch
+                    <span class="setting__hint">Messages revealed per click</span>
+                </label>
+                <input type="number" id="batch-size" class="setting__input" min="1" max="50" step="1">
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="popup-footer">
+            <button id="save-btn" class="btn btn--primary" type="button">Save</button>
+            <button id="reset-btn" class="btn btn--ghost" type="button">Reset defaults</button>
+        </footer>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

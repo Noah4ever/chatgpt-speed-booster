@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run typecheck
+
+      - run: npm run build:all
+
+      - name: Package extensions
+        run: |
+          cd dist
+          for browser in chrome firefox edge safari; do
+            zip -r "../chatgpt-speed-booster-${browser}.zip" "${browser}/"
+          done
+
+      - name: Get version
+        id: version
+        run: echo "version=$(node -p 'require("./package.json").version')" >> "$GITHUB_OUTPUT"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          files: |
+            chatgpt-speed-booster-chrome.zip
+            chatgpt-speed-booster-firefox.zip
+            chatgpt-speed-booster-edge.zip
+            chatgpt-speed-booster-safari.zip
