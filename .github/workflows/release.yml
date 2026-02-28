@@ -36,9 +36,11 @@ jobs:
 
       - name: Package extensions
         run: |
-          cd dist
+          rm -f chatgpt-speed-booster-chrome.zip chatgpt-speed-booster-firefox.zip chatgpt-speed-booster-edge.zip chatgpt-speed-booster-safari.zip
           for browser in chrome firefox edge safari; do
-            zip -r "../chatgpt-speed-booster-${browser}.zip" "${browser}/"
+            cd "dist/${browser}"
+            zip -r "../../chatgpt-speed-booster-${browser}.zip" .
+            cd - >/dev/null
           done
 
       - name: Resolve release tag
