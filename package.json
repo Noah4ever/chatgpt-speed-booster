@@ -9,6 +9,8 @@
         "build:firefox": "TARGET_BROWSER=firefox node scripts/build.mjs",
         "build:edge": "TARGET_BROWSER=edge node scripts/build.mjs",
         "build:safari": "TARGET_BROWSER=safari node scripts/build.mjs",
+        "safari:convert": "xcrun safari-web-extension-converter dist/safari --project-location safari-app --app-name 'ChatGPT Speed Booster' --bundle-identifier com.noah.chatgptspeedbooster --force",
+        "safari:setup": "npm run build:safari && npm run safari:convert",
         "build:all": "node scripts/build.mjs --all",
         "watch:chrome": "TARGET_BROWSER=chrome node scripts/build.mjs --watch",
         "watch:firefox": "TARGET_BROWSER=firefox node scripts/build.mjs --watch",
