@@ -55,30 +55,36 @@ npm run build:all
 
 #### Safari
 
-1. Build and convert:
+1. Build and generate the Xcode project:
 
 ```bash
 npm run safari:setup
 ```
 
-2. Open `safari-app/ChatGPT Speed Booster.xcodeproj`
-3. In Xcode, select the app target (not the extension target)
-4. In Signing & Capabilities, choose your Apple team for both:
-
-- ChatGPT Speed Booster (App)
-- ChatGPT Speed Booster Extension
-
-5. Run the app target once
-6. Open Safari, then go to Settings > Extensions and enable ChatGPT Speed Booster
-
-If it says "not active" and you do not see it in the extension list:
+2. If it doesn't open automatically, open the Xcode project:
 
 ```bash
-rm -rf safari-app
-npm run safari:setup
+open "safari-app/ChatGPT Speed Booster/ChatGPT Speed Booster.xcodeproj"
 ```
 
-Then run the app target again from Xcode.
+3. In Xcode, select the **macOS app target** (not iOS, not extension target), then click **Run (▶)**.
+
+![Xcode macOS target](assets/docs/xcode-target.png)
+
+After running, you may see a popup like this:
+
+![Quit and Open Safari Settings popup](assets/docs/extension-popup.png)
+
+1. In Safari, open **Safari → Settings → Extensions** and enable **ChatGPT Speed Booster**.
+
+If it appears but stays disabled:
+
+![Disabled Safari extension](assets/docs/safari-extension.png)
+
+Turn it on and allow it if Safari asks for permission.
+
+1. Open `https://chatgpt.com` to verify it is active.
+   You may have to allow it to run on that site if Safari prompts you. Maybe left of the address bar.
 
 ## How it works
 
@@ -91,10 +97,10 @@ Then run the app target again from Xcode.
 
 Set these from the popup:
 
-| Setting | Default | Range |
-|---------|---------|-------|
-| Visible messages | 10 | 1-200 |
-| Load more batch | 5 | 1-50 |
+| Setting          | Default | Range |
+| ---------------- | ------- | ----- |
+| Visible messages | 10      | 1-200 |
+| Load more batch  | 5       | 1-50  |
 
 ## Browser support
 
