@@ -43,6 +43,32 @@ jobs:
             cd - >/dev/null
           done
 
+      - name: Validate Firefox data collection manifest field
+        run: |
+          node -e '
+            const fs = require("fs");
+            const manifest = JSON.parse(fs.readFileSync("dist/firefox/manifest.json", "utf8"));
+            const required = manifest?.browser_specific_settings?.gecko?.data_collection_permissions?.required;
+            if (!Array.isArray(required) || !required.includes("none")) {
+              console.error("Firefox manifest is missing browser_specific_settings.gecko.data_collection_permissions.required=[\"none\"]");
+              process.exit(1);
+            }
+          '
+
+      - name: Validate zip structure
+        run: |
+          for browser in chrome firefox edge safari; do
+            zip_file="chatgpt-speed-booster-${browser}.zip"
+            unzip -Z1 "$zip_file" | grep -qx "manifest.json" || {
+              echo "manifest.json missing at zip root in $zip_file"
+              exit 1
+            }
+            unzip -Z1 "$zip_file" | grep -q "^${browser}/" && {
+              echo "zip has nested ${browser}/ folder in $zip_file"
+              exit 1
+            }
+          done
+
       - name: Resolve release tag
         id: tag
         run: |
