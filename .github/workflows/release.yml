@@ -57,17 +57,30 @@ jobs:
 
       - name: Validate zip structure
         run: |
-          for browser in chrome firefox edge safari; do
-            zip_file="chatgpt-speed-booster-${browser}.zip"
-            unzip -Z1 "$zip_file" | grep -qx "manifest.json" || {
-              echo "manifest.json missing at zip root in $zip_file"
-              exit 1
+          node -e '
+            const { execSync } = require("child_process");
+            const browsers = ["chrome", "firefox", "edge", "safari"];
+
+            for (const browser of browsers) {
+              const zipFile = `chatgpt-speed-booster-${browser}.zip`;
+              const raw = execSync(`unzip -Z1 "${zipFile}"`, { encoding: "utf8" });
+              const entries = raw
+                .split(/\r?\n/)
+                .map((line) => line.trim())
+                .filter(Boolean)
+                .map((line) => line.replace(/^\.\//, ""));
+
+              if (!entries.includes("manifest.json")) {
+                console.error(`manifest.json missing at zip root in ${zipFile}`);
+                process.exit(1);
+              }
+
+              if (entries.some((entry) => entry.startsWith(`${browser}/`))) {
+                console.error(`zip has nested ${browser}/ folder in ${zipFile}`);
+                process.exit(1);
+              }
             }
-            unzip -Z1 "$zip_file" | grep -q "^${browser}/" && {
-              echo "zip has nested ${browser}/ folder in $zip_file"
-              exit 1
-            }
-          done
+          '
 
       - name: Resolve release tag
         id: tag
