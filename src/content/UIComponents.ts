@@ -1,8 +1,30 @@
 import { CSS_PREFIX } from "../shared/constants";
 import { logger } from "../shared/logger";
-import { ARROW_UP_SVG } from "./icons";
 
 export type LoadMoreHandler = () => void;
+
+function createArrowUpIcon(): SVGElement {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("xmlns", ns);
+    svg.setAttribute("width", "16");
+    svg.setAttribute("height", "16");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+
+    const vertical = document.createElementNS(ns, "path");
+    vertical.setAttribute("d", "M12 19V5");
+
+    const arrowHead = document.createElementNS(ns, "path");
+    arrowHead.setAttribute("d", "m5 12 7-7 7 7");
+
+    svg.append(vertical, arrowHead);
+    return svg;
+}
 
 export class LoadMoreButton {
     private container: HTMLElement | null = null;
@@ -94,9 +116,9 @@ export class LoadMoreButton {
         button.addEventListener("mouseup", () => { button.style.transform = "scale(1)"; });
 
         const icon = document.createElement("span");
-        icon.innerHTML = ARROW_UP_SVG;
         icon.setAttribute("aria-hidden", "true");
         Object.assign(icon.style, { display: "inline-flex", alignItems: "center" });
+        icon.appendChild(createArrowUpIcon());
 
         const label = document.createElement("span");
         label.className = `${CSS_PREFIX}-load-more-label`;
