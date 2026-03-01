@@ -2,32 +2,6 @@
 
 ChatGPT Speed Booster keeps long chats responsive by showing only recent messages first, then letting you load older ones when you need them.
 
-## Source code submission (Firefox)
-
-This project is built from TypeScript source files and bundled with esbuild.
-
-### Build environment
-
-- Operating systems: Linux, macOS, or Windows
-- Node.js: 18 or newer
-- npm: included with Node.js
-
-### Reproducible build steps (Firefox)
-
-```bash
-git clone https://github.com/Noah4ever/chatgpt-speed-booster.git
-cd chatgpt-speed-booster
-npm ci
-npm run build:firefox
-```
-
-The Firefox extension output is generated in `dist/firefox/`.
-The file to load or package is `dist/firefox/manifest.json`.
-
-Build script used by this project:
-
-- `scripts/build.mjs`
-
 ## Build it yourself
 
 ### 1) Requirements
@@ -140,6 +114,32 @@ Set these from the popup:
 - No message content is read or sent anywhere
 - No analytics or tracking
 - Settings are stored locally in browser storage
+
+## Source code submission (Firefox)
+
+This project is built from TypeScript source files and bundled with esbuild.
+
+### Build environment
+
+- Operating systems: Linux, macOS, or Windows
+- Node.js: 18 or newer
+- npm: included with Node.js
+
+### Reproducible build steps (Firefox)
+
+```bash
+git clone https://github.com/Noah4ever/chatgpt-speed-booster.git
+cd chatgpt-speed-booster
+npm ci
+npm run build:firefox
+```
+
+The Firefox extension output is generated in `dist/firefox/`.
+The file to load or package is `dist/firefox/manifest.json`.
+
+Build script used by this project:
+
+- `scripts/build.mjs`
 
 ## License
 
