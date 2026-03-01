@@ -2,6 +2,8 @@
 
 ChatGPT Speed Booster keeps long chats responsive by showing only recent messages first, then letting you load older ones when you need them.
 
+<img width="1764" height="1308" alt="speed-booster-popup" src="https://github.com/user-attachments/assets/6720e0c3-2d5d-4a7d-930f-246984b39fa3" />
+
 ## Build it yourself
 
 ### 1) Requirements
