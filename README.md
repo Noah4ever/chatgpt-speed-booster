@@ -19,26 +19,27 @@ npm install
 
 ### 3) Build
 
-```bash
-npm run build:chrome
-```
-
-Build output goes to `dist/chrome/`.
-
-You can also build all targets:
+Build all targets:
 
 ```bash
 npm run build:all
 ```
+
+You can also just build one target (`chrome`, `firefox`, `safari`, `edge`):
+
+```bash
+npm run build:chrome
+```
+Build ouput goes to `dist/chrome/`.
 
 ### 4) Load it in your browser
 
 #### Chrome
 
 1. Open `chrome://extensions`
-2. Turn on Developer mode
-3. Click Load unpacked
-4. Select `dist/chrome/`
+3. Turn on Developer mode  (top right)
+4. Click Load unpacked (top left)
+5. Select `dist/chrome/`
 
 #### Edge
 
