@@ -2,20 +2,21 @@ import type {
     ExtensionConfig,
     TrackedMessage,
     ExtensionStatus,
-    MessageMeta,
 } from "../shared/types";
 import { DEFAULT_CONFIG, DATA_ATTR } from "../shared/constants";
 import { logger } from "../shared/logger";
-import { Selectors } from "./selectors";
 
 export class MessageManager {
     private messages: TrackedMessage[] = [];
     private config: ExtensionConfig = { ...DEFAULT_CONFIG };
-    private messagePositions: MessageMeta[] = [];
-    private positionTimer: ReturnType<typeof setTimeout> | null = null;
+    private messageIdAttribute = "data-testid";
 
     private get visibleCount(): number {
         return this.messages.filter((m) => m.visible).length;
+    }
+
+    setMessageIdAttribute(attr: string): void {
+        this.messageIdAttribute = attr;
     }
 
     updateConfig(config: ExtensionConfig): void {
@@ -35,7 +36,7 @@ export class MessageManager {
             if (this.findByElement(el)) continue;
             this.trackElement(el);
         }
-        this.enforceLimit();
+        this.recalculateVisibility();
     }
 
     removeMessages(elements: HTMLElement[]): void {
@@ -46,7 +47,7 @@ export class MessageManager {
     loadMore(): number {
         if (!this.config.enabled) return 0;
         const hidden = this.messages.filter((m) => !m.visible);
-        const toReveal = hidden.slice(-this.config.loadMoreBatchSize * 2); // Multiply by 2 since one conv = 1 user turn + 1 assistant reply
+        const toReveal = hidden.slice(-this.config.loadMoreBatchSize * 2);
         for (const msg of toReveal) this.showMessage(msg);
         logger.debug(`revealed ${toReveal.length} additional messages`);
         return toReveal.length;
@@ -65,6 +66,7 @@ export class MessageManager {
             visibleMessages: visible,
             hiddenMessages: total - visible,
             showStatus: this.config.showStatus,
+            statusPosition: this.config.statusPosition,
         };
     }
 
@@ -102,31 +104,13 @@ export class MessageManager {
         }
     }
 
-    /**
-     * Preserves the visible window size during incremental additions by hiding
-     * oldest currently-visible turns first.
-     */
-    private enforceLimit(): void {
-        if (!this.config.enabled) return;
-        let excess = this.visibleCount - this.config.visibleMessageLimit * 2;
-        for (const msg of this.messages) {
-            if (excess <= 0) break;
-            if (msg.visible) {
-                this.hideMessage(msg);
-                excess--;
-            }
-        }
-    }
-
     private hideMessage(msg: TrackedMessage): void {
-        if (!msg.visible) return;
         msg.visible = false;
         msg.element.style.display = "none";
         msg.element.setAttribute("aria-hidden", "true");
     }
 
     private showMessage(msg: TrackedMessage): void {
-        if (msg.visible) return;
         msg.visible = true;
         msg.element.style.display = "";
         msg.element.removeAttribute("aria-hidden");
@@ -137,60 +121,11 @@ export class MessageManager {
     }
 
     private deriveId(el: HTMLElement): string {
-        const testId = el.getAttribute("data-testid");
-        if (testId) return testId;
-        return `msg-${this.messages.length}-${Date.now()}`;
-    }
-
-    /**
-     * Recomputes ordered assistant-message bounds in scroll-root coordinates.
-     * Uses a tiny debounce so layout reads happen after DOM visibility updates settle.
-     */
-    recomputeMessagePositions(delay: number = 1) {
-        if (!this.config.showStatus) return;
-
-        if (this.positionTimer) {
-            clearTimeout(this.positionTimer);
+        if (this.messageIdAttribute) {
+            const attrValue = el.getAttribute(this.messageIdAttribute);
+            if (attrValue) return attrValue;
         }
-
-        this.positionTimer = setTimeout(() => {
-            this.positionTimer = null;
-            const scrollRoot =
-                document.querySelector<HTMLElement>("[data-scroll-root]") ??
-                document.querySelector<HTMLElement>(
-                    Selectors.scrollContainer,
-                ) ??
-                document.querySelector<HTMLElement>(
-                    Selectors.scrollContainerAlt,
-                );
-
-            if (!scrollRoot) {
-                this.messagePositions = [];
-                return;
-            }
-
-            const rootRect = scrollRoot.getBoundingClientRect();
-            const rootScrollTop = scrollRoot.scrollTop;
-            const visibleMessages = this.messages.filter(
-                (m) =>
-                    m.visible &&
-                    m.element.isConnected &&
-                    m.element.style.display !== "none" &&
-                    m.element.matches(Selectors.replies),
-            );
-
-            this.messagePositions = visibleMessages
-                .map(({ element }) => {
-                    const rect = element.getBoundingClientRect();
-                    const top = rect.top - rootRect.top + rootScrollTop;
-                    return { top, bottom: top + rect.height };
-                })
-                .sort((a, b) => a.top - b.top);
-        }, delay);
-    }
-
-    getMessagePositions(): MessageMeta[] {
-        return this.messagePositions;
+        return `msg-${this.messages.length}-${Date.now()}`;
     }
 
     /**

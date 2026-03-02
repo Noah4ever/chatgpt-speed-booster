@@ -1,10 +1,14 @@
 import * as esbuild from "esbuild";
-import { cpSync, mkdirSync, existsSync, readdirSync } from "fs";
+import { cpSync, mkdirSync, existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
+
+// Read site configs — single source of truth for all supported AI chat sites
+const sitesConfig = JSON.parse(readFileSync(resolve(ROOT, "sites.config.json"), "utf8"));
+const allUrlPatterns = sitesConfig.flatMap((s) => s.urlPatterns);
 
 const BROWSERS = ["chrome", "firefox", "edge", "safari"];
 const args = process.argv.slice(2);
@@ -40,7 +44,14 @@ function copyAssets(browser) {
 
     mkdirSync(outdir, { recursive: true });
 
-    cpSync(resolve(browserDir, "manifest.json"), resolve(outdir, "manifest.json"));
+    // Read manifest template and inject URL patterns from sites.config.json
+    const manifest = JSON.parse(readFileSync(resolve(browserDir, "manifest.json"), "utf8"));
+    manifest.host_permissions = allUrlPatterns;
+    if (manifest.content_scripts?.[0]) {
+        manifest.content_scripts[0].matches = allUrlPatterns;
+    }
+    writeFileSync(resolve(outdir, "manifest.json"), JSON.stringify(manifest, null, 4) + "\n");
+
     cpSync(resolve(ROOT, "src", "popup", "popup.html"), resolve(outdir, "popup.html"));
     cpSync(resolve(ROOT, "src", "popup", "popup.css"), resolve(outdir, "popup.css"));
 

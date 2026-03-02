@@ -1,7 +1,7 @@
 import { DOMObserver } from "./DOMObserver";
+import { MessageManager } from "./MessageManager";
 import { LoadMoreButton, StatusIndicator } from "./UIComponents";
-import { Selectors } from "./selectors";
-import { messageManager } from "./Singletons";
+import { detectCurrentSite, type SiteConfig } from "../shared/sites";
 import { loadConfig, onConfigChanged } from "../shared/storage";
 import { onMessage } from "../shared/browser-api";
 import {
@@ -12,23 +12,35 @@ import {
 import { logger } from "../shared/logger";
 
 let config: ExtensionConfig;
+let currentSite: SiteConfig;
+const messageManager = new MessageManager();
 let loadMoreButton: LoadMoreButton;
 let statusIndicator: StatusIndicator;
 let domObserver: DOMObserver;
-let recomputeRafId: number | null = null;
+let conversationRetryTimer: ReturnType<typeof setTimeout> | null = null;
+let previousMessageElements: Set<HTMLElement> = new Set();
 
 async function bootstrap(): Promise<void> {
-    logger.info("bootstrapping content script");
+    const site = detectCurrentSite();
+    if (!site) {
+        logger.info("no supported site detected, content script inactive");
+        return;
+    }
+    currentSite = site;
+    logger.info(`bootstrapping content script for ${currentSite.name}`);
 
     config = await loadConfig();
     messageManager.updateConfig(config);
+    if (currentSite.messageIdAttribute) {
+        messageManager.setMessageIdAttribute(currentSite.messageIdAttribute);
+    }
 
     loadMoreButton = new LoadMoreButton(handleLoadMore);
     statusIndicator = new StatusIndicator();
 
     if (!config.showStatus) statusIndicator.hide();
 
-    domObserver = new DOMObserver({
+    domObserver = new DOMObserver(currentSite.selectors, {
         onMessagesAdded: handleMessagesAdded,
         onMessagesRemoved: handleMessagesRemoved,
         onConversationChanged: handleConversationChanged,
@@ -41,6 +53,17 @@ async function bootstrap(): Promise<void> {
     scheduleInitialScan();
     onConfigChanged(handleConfigUpdated);
     onMessage(handleExtensionMessage);
+
+    // Diagnostic: log selector match info to help debug site configs
+    setTimeout(() => {
+        const msgs = domObserver.queryAllMessages();
+        const scrollEl = domObserver.findScrollContainer();
+        console.log(
+            `[AI Chat Speed Booster] Site: ${currentSite.name} | ` +
+            `Selector: "${currentSite.selectors.messageTurn}" → ${msgs.length} match(es) | ` +
+            `Scroll container: ${scrollEl ? "found" : "NOT found"}`,
+        );
+    }, 3000);
 }
 
 /**
@@ -52,14 +75,12 @@ function scheduleInitialScan(): void {
         if (existing.length > 0) {
             messageManager.initialise(existing);
             refreshUI();
-            scheduleRecomputePositions();
             logger.info(`initial scan: ${existing.length} messages`);
             return;
         }
         setTimeout(attempt, 500);
     };
     attempt();
-    statusIndicator.initStatus();
 }
 
 /**
@@ -68,7 +89,6 @@ function scheduleInitialScan(): void {
 function handleMessagesAdded(elements: HTMLElement[]): void {
     messageManager.addMessages(elements);
     refreshUI();
-    scheduleRecomputePositions();
 }
 
 /**
@@ -77,7 +97,6 @@ function handleMessagesAdded(elements: HTMLElement[]): void {
 function handleMessagesRemoved(elements: HTMLElement[]): void {
     messageManager.removeMessages(elements);
     refreshUI();
-    scheduleRecomputePositions();
 }
 
 /**
@@ -86,27 +105,51 @@ function handleMessagesRemoved(elements: HTMLElement[]): void {
  */
 function handleConversationChanged(): void {
     logger.debug("conversation changed, re-initialising");
-    // Destroy old instances
+
+    // Cancel any in-flight retry loop from a previous navigation
+    if (conversationRetryTimer) {
+        clearTimeout(conversationRetryTimer);
+        conversationRetryTimer = null;
+    }
+
+    // Remember current DOM elements so we can tell when genuinely new
+    // messages appear (old ones may linger until React unmounts them)
+    previousMessageElements = new Set(domObserver.queryAllMessages());
+
+    messageManager.destroy();
     loadMoreButton.hide();
     statusIndicator.hide();
-    domObserver.stop();
 
-    // Re-initialize since new conv = new page
-    bootstrap();
-
-    setTimeout(() => {
+    // Wait for new messages to render, retry a few times for SPA navigations
+    let retries = 0;
+    const maxRetries = 20;
+    const attempt = (): void => {
         const messages = domObserver.queryAllMessages();
-        messageManager.initialise(messages);
-        refreshUI();
-        scheduleRecomputePositions();
-    }, 10);
+        const hasNewMessages = messages.some((m) => !previousMessageElements.has(m));
+
+        if (hasNewMessages || retries >= maxRetries) {
+            // If we found genuinely new messages, use all current messages.
+            // If we hit maxRetries with only old messages, initialise with
+            // whatever is there (could be the same chat reloaded).
+            messageManager.initialise(messages);
+            previousMessageElements = new Set();
+            refreshUI();
+            conversationRetryTimer = null;
+            if (messages.length > 0) {
+                logger.debug(`re-initialised with ${messages.length} messages after ${retries} retries`);
+            }
+            return;
+        }
+        retries++;
+        conversationRetryTimer = setTimeout(attempt, 300);
+    };
+    conversationRetryTimer = setTimeout(attempt, 200);
 }
 
 function handleConfigUpdated(newConfig: ExtensionConfig): void {
     config = newConfig;
     messageManager.updateConfig(config);
     refreshUI();
-    scheduleRecomputePositions();
     logger.debug("config updated from external source");
 }
 
@@ -123,25 +166,7 @@ function handleLoadMore(): void {
     const revealed = messageManager.loadMore();
     if (revealed > 0) {
         refreshUI();
-        scheduleRecomputePositions(0);
-
-        // 1ms delay
-        setTimeout(() => {
-            statusIndicator.updatePosition();
-            statusIndicator.scheduleLabelUpdate();
-        }, 1);
     }
-}
-
-/* Coalesces multiple update triggers into one layout pass so positions are computed
- * only after DOM visibility changes have been applied.
- */
-function scheduleRecomputePositions(delay?: number): void {
-    if (recomputeRafId != null) return;
-    recomputeRafId = requestAnimationFrame(() => {
-        messageManager.recomputeMessagePositions(delay);
-        recomputeRafId = null;
-    });
 }
 
 /**
@@ -162,15 +187,15 @@ function refreshUI(): void {
         loadMoreButton.hide();
     }
 
-    if (!config.enabled || !config.showStatus || status.totalMessages == 0) {
+    if (!config.enabled || !config.showStatus || status.totalMessages === 0) {
         statusIndicator.hide();
     } else {
-        statusIndicator.initStatus();
+        statusIndicator.update(status.hiddenMessages, status.totalMessages, config.statusPosition);
     }
 }
 
 function findFirstVisibleMessage(): HTMLElement | null {
-    const all = document.querySelectorAll<HTMLElement>(Selectors.messageTurn);
+    const all = document.querySelectorAll<HTMLElement>(currentSite.selectors.messageTurn);
     for (const el of all) {
         if (el.style.display !== "none") return el;
     }
@@ -178,14 +203,14 @@ function findFirstVisibleMessage(): HTMLElement | null {
 }
 
 function findMessageContainer(): HTMLElement | null {
-    const firstMsg = document.querySelector<HTMLElement>(Selectors.messageTurn);
+    const firstMsg = document.querySelector<HTMLElement>(currentSite.selectors.messageTurn);
     return firstMsg?.parentElement ?? null;
 }
 
 window.addEventListener("beforeunload", () => {
-    if (recomputeRafId != null) {
-        cancelAnimationFrame(recomputeRafId);
-        recomputeRafId = null;
+    if (conversationRetryTimer) {
+        clearTimeout(conversationRetryTimer);
+        conversationRetryTimer = null;
     }
     domObserver.stop();
     messageManager.destroy();

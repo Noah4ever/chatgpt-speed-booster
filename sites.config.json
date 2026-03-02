@@ -1,0 +1,30 @@
+[
+    {
+        "id": "chatgpt",
+        "name": "ChatGPT",
+        "hostnames": [
+            "chatgpt.com"
+        ],
+        "urlPatterns": [
+            "*://chatgpt.com/*"
+        ],
+        "selectors": {
+            "messageTurn": "article[data-message-id], article:has([data-message-id])",
+            "scrollContainer": "main"
+        }
+    },
+    {
+        "id": "claude",
+        "name": "Claude",
+        "hostnames": [
+            "claude.ai"
+        ],
+        "urlPatterns": [
+            "*://claude.ai/*"
+        ],
+        "selectors": {
+            "messageTurn": "[data-test-render-count]",
+            "scrollContainer": ".overflow-y-scroll"
+        }
+    }
+]

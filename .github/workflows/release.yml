@@ -36,10 +36,10 @@ jobs:
 
       - name: Package extensions
         run: |
-          rm -f chatgpt-speed-booster-chrome.zip chatgpt-speed-booster-firefox.zip chatgpt-speed-booster-edge.zip chatgpt-speed-booster-safari.zip
+          rm -f ai-chat-speed-booster-chrome.zip ai-chat-speed-booster-firefox.zip ai-chat-speed-booster-edge.zip ai-chat-speed-booster-safari.zip
           for browser in chrome firefox edge safari; do
             cd "dist/${browser}"
-            zip -r "../../chatgpt-speed-booster-${browser}.zip" .
+            zip -r "../../ai-chat-speed-booster-${browser}.zip" .
             cd - >/dev/null
           done
 
@@ -62,7 +62,7 @@ jobs:
             const browsers = ["chrome", "firefox", "edge", "safari"];
 
             for (const browser of browsers) {
-              const zipFile = `chatgpt-speed-booster-${browser}.zip`;
+              const zipFile = `ai-chat-speed-booster-${browser}.zip`;
               const raw = execSync(`unzip -Z1 "${zipFile}"`, { encoding: "utf8" });
               const entries = raw
                 .split(/\r?\n/)
@@ -102,7 +102,7 @@ jobs:
           fail_on_unmatched_files: true
           generate_release_notes: true
           files: |
-            chatgpt-speed-booster-chrome.zip
-            chatgpt-speed-booster-firefox.zip
-            chatgpt-speed-booster-edge.zip
-            chatgpt-speed-booster-safari.zip
+            ai-chat-speed-booster-chrome.zip
+            ai-chat-speed-booster-firefox.zip
+            ai-chat-speed-booster-edge.zip
+            ai-chat-speed-booster-safari.zip

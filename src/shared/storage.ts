@@ -22,6 +22,9 @@ function sanitiseConfig(raw: Partial<ExtensionConfig> | undefined): ExtensionCon
         ),
         enabled: typeof base.enabled === "boolean" ? base.enabled : DEFAULT_CONFIG.enabled,
         showStatus: typeof base.showStatus === "boolean" ? base.showStatus : DEFAULT_CONFIG.showStatus,
+        statusPosition: ["top-left", "top-right", "bottom-left", "bottom-right"].includes(base.statusPosition)
+            ? base.statusPosition
+            : DEFAULT_CONFIG.statusPosition,
     };
 }
 
