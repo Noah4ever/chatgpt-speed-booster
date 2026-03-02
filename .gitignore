@@ -9,4 +9,8 @@ Thumbs.db
 .env
 .vscode/
 safari-app
-chatgpt-speed-booster-source-v*/
+ai-chat-speed-booster-source-v*/
+tests/.auth-profile/
+test-results/
+playwright-report/
+.env

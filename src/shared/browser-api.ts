@@ -29,7 +29,7 @@ export function onMessage(
 
             if (result instanceof Promise) {
                 result.then(sendResponse).catch((err: unknown) => {
-                    console.error("[ChatGPT Speed Booster] message handler error:", err);
+                    console.error("[AI Chat Speed Booster] message handler error:", err);
                     sendResponse(undefined);
                 });
                 return true;

@@ -34,7 +34,7 @@ async function refreshStatus(): Promise<void> {
                 `${status.visibleMessages/2}/${status.totalMessages/2} messages visible` +
                 (status.hiddenMessages > 0 ? ` · ${status.hiddenMessages/2} hidden` : "");
         } else {
-            statusText.textContent = "Open a ChatGPT conversation to see status";
+            statusText.textContent = "Open a supported AI chat to see status";
         }
     } catch {
         statusText.textContent = "Unable to fetch status";

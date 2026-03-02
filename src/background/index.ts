@@ -3,6 +3,9 @@ import { onMessage, api } from "../shared/browser-api";
 import { MessageType } from "../shared/types";
 import type { ExtensionConfig, ExtensionMessageUnion, ExtensionStatus } from "../shared/types";
 import { logger } from "../shared/logger";
+import { getAllUrlPatterns } from "../shared/sites";
+
+const allUrlPatterns = getAllUrlPatterns();
 
 api.runtime.onInstalled.addListener(async (details: chrome.runtime.InstalledDetails) => {
     if (details.reason === "install") {
@@ -54,7 +57,7 @@ onMessage(async (message): Promise<unknown> => {
 
 async function broadcastToContentScripts(message: ExtensionMessageUnion): Promise<void> {
     try {
-        const tabs = await api.tabs.query({ url: "*://chatgpt.com/*" });
+        const tabs = await api.tabs.query({ url: allUrlPatterns as string[] });
         for (const tab of tabs) {
             if (tab.id == null) continue;
             try { await api.tabs.sendMessage(tab.id, message); } catch { /* not injected */ }
@@ -66,7 +69,7 @@ async function broadcastToContentScripts(message: ExtensionMessageUnion): Promis
 
 async function forwardToActiveTab(message: ExtensionMessageUnion): Promise<ExtensionStatus | undefined> {
     try {
-        const [tab] = await api.tabs.query({ active: true, currentWindow: true, url: "*://chatgpt.com/*" });
+        const [tab] = await api.tabs.query({ active: true, currentWindow: true, url: allUrlPatterns as string[] });
         if (!tab?.id) return undefined;
         return (await api.tabs.sendMessage(tab.id, message)) as ExtensionStatus | undefined;
     } catch {

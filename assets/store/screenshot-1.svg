@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#212121"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="800" fill="url(#bg)"/>
+
+  <!-- Browser chrome mockup -->
+  <g transform="translate(80, 60)">
+    <rect width="1120" height="680" rx="12" fill="#2f2f2f" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <!-- Title bar -->
+    <rect width="1120" height="44" rx="12" fill="#353535"/>
+    <rect y="32" width="1120" height="12" fill="#353535"/>
+    <!-- Window dots -->
+    <circle cx="24" cy="22" r="6" fill="#ff5f57"/>
+    <circle cx="44" cy="22" r="6" fill="#febc2e"/>
+    <circle cx="64" cy="22" r="6" fill="#28c840"/>
+    <!-- URL bar -->
+    <rect x="120" y="10" width="880" height="24" rx="6" fill="rgba(0,0,0,0.3)"/>
+    <text x="560" y="27" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#8e8ea0">chatgpt.com/c/conversation-id</text>
+
+    <!-- Sidebar -->
+    <rect x="0" y="44" width="260" height="636" fill="#171717"/>
+    <rect x="0" y="668" width="260" height="12" rx="0 0 12 0" fill="#171717"/>
+    <!-- Sidebar items -->
+    <rect x="16" y="64" width="228" height="36" rx="8" fill="rgba(255,255,255,0.05)"/>
+    <rect x="30" y="78" width="140" height="8" rx="4" fill="rgba(255,255,255,0.12)"/>
+    <rect x="16" y="112" width="228" height="36" rx="8" fill="transparent"/>
+    <rect x="30" y="126" width="120" height="8" rx="4" fill="rgba(255,255,255,0.06)"/>
+    <rect x="16" y="160" width="228" height="36" rx="8" fill="transparent"/>
+    <rect x="30" y="174" width="160" height="8" rx="4" fill="rgba(255,255,255,0.06)"/>
+    <rect x="16" y="208" width="228" height="36" rx="8" fill="transparent"/>
+    <rect x="30" y="222" width="100" height="8" rx="4" fill="rgba(255,255,255,0.06)"/>
+
+    <!-- Main content area -->
+    <rect x="260" y="44" width="860" height="636" fill="#212121"/>
+
+    <!-- Load more button -->
+    <rect x="520" y="70" width="240" height="36" rx="8" fill="rgba(16,163,127,0.1)" stroke="rgba(16,163,127,0.3)" stroke-width="1"/>
+    <text x="640" y="94" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="500" fill="#10a37f">↑ Load more (47 hidden)</text>
+
+    <!-- Message 1 user -->
+    <g transform="translate(340, 130)">
+      <rect width="700" height="70" rx="10" fill="transparent"/>
+      <text x="0" y="18" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#ececec">You</text>
+      <rect x="0" y="30" width="400" height="10" rx="4" fill="rgba(255,255,255,0.08)"/>
+      <rect x="0" y="48" width="280" height="8" rx="4" fill="rgba(255,255,255,0.05)"/>
+    </g>
+
+    <!-- Message 2 assistant -->
+    <g transform="translate(340, 220)">
+      <rect width="700" height="110" rx="10" fill="rgba(255,255,255,0.02)"/>
+      <text x="15" y="28" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#ececec">ChatGPT</text>
+      <rect x="15" y="42" width="520" height="10" rx="4" fill="rgba(255,255,255,0.08)"/>
+      <rect x="15" y="60" width="450" height="8" rx="4" fill="rgba(255,255,255,0.05)"/>
+      <rect x="15" y="76" width="380" height="8" rx="4" fill="rgba(255,255,255,0.05)"/>
+      <rect x="15" y="92" width="200" height="8" rx="4" fill="rgba(255,255,255,0.05)"/>
+    </g>
+
+    <!-- Message 3 user -->
+    <g transform="translate(340, 350)">
+      <rect width="700" height="60" rx="10" fill="transparent"/>
+      <text x="0" y="18" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#ececec">You</text>
+      <rect x="0" y="30" width="350" height="10" rx="4" fill="rgba(255,255,255,0.08)"/>
+      <rect x="0" y="48" width="180" height="8" rx="4" fill="rgba(255,255,255,0.05)"/>
+    </g>
+
+    <!-- Message 4 assistant -->
+    <g transform="translate(340, 430)">
+      <rect width="700" height="100" rx="10" fill="rgba(255,255,255,0.02)"/>
+      <text x="15" y="28" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#ececec">ChatGPT</text>
+      <rect x="15" y="42" width="480" height="10" rx="4" fill="rgba(255,255,255,0.08)"/>
+      <rect x="15" y="60" width="550" height="8" rx="4" fill="rgba(255,255,255,0.05)"/>
+      <rect x="15" y="76" width="300" height="8" rx="4" fill="rgba(255,255,255,0.05)"/>
+    </g>
+
+    <!-- Input area -->
+    <g transform="translate(340, 580)">
+      <rect width="700" height="48" rx="24" fill="#2f2f2f" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <text x="24" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#8e8ea0">Message ChatGPT</text>
+    </g>
+
+    <!-- Status indicator -->
+    <rect x="940" y="554" width="120" height="28" rx="7" fill="rgba(0,0,0,0.6)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+    <text x="1000" y="573" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#8e8ea0">4/51 messages</text>
+
+    <!-- Popup overlay -->
+    <g transform="translate(790, 44)">
+      <rect width="320" height="280" rx="12" fill="#212121" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <!-- Popup header -->
+      <g transform="translate(20, 16)">
+        <rect width="18" height="18" rx="4" fill="#10a37f"/>
+        <path transform="translate(0,0) scale(0.75)" d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff" opacity="0.9"/>
+        <text x="26" y="14" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#ececec">Speed Booster</text>
+        <!-- Toggle on -->
+        <rect x="224" y="0" width="40" height="22" rx="11" fill="#10a37f"/>
+        <circle cx="248" cy="11" r="8" fill="#fff"/>
+      </g>
+      <text x="20" y="52" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#8e8ea0">4/51 messages visible · 47 hidden</text>
+
+      <!-- Settings -->
+      <rect x="20" y="68" width="280" height="56" rx="8" fill="#2f2f2f"/>
+      <text x="32" y="90" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="500" fill="#ececec">Visible messages</text>
+      <text x="32" y="108" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#8e8ea0">Messages shown at once</text>
+      <rect x="244" y="80" width="44" height="30" rx="6" fill="#212121" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <text x="266" y="100" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#ececec">10</text>
+
+      <rect x="20" y="134" width="280" height="56" rx="8" fill="#2f2f2f"/>
+      <text x="32" y="156" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="500" fill="#ececec">Batch size</text>
+      <text x="32" y="174" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#8e8ea0">Loaded per click</text>
+      <rect x="244" y="146" width="44" height="30" rx="6" fill="#212121" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <text x="266" y="166" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#ececec">5</text>
+
+      <!-- Buttons -->
+      <rect x="20" y="204" width="136" height="36" rx="8" fill="#10a37f"/>
+      <text x="88" y="228" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="500" fill="#fff">Save</text>
+      <rect x="164" y="204" width="136" height="36" rx="8" fill="#2f2f2f"/>
+      <text x="232" y="228" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="500" fill="#b4b4b4">Reset</text>
+    </g>
+  </g>
+</svg>

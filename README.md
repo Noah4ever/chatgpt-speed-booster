@@ -1,12 +1,12 @@
-# ChatGPT Speed Booster
+# AI Chat Speed Booster
 
-ChatGPT Speed Booster keeps long chats responsive by showing only recent messages first, then letting you load older ones when you need them.
+Keeps long AI chat conversations responsive by showing only recent messages first, then letting you load older ones when you need them.
 
-| Browser | Link | 
+Works on **ChatGPT**, **Claude**, and any AI chat app you add to the config.
+
+| Browser | Link |
 | - | - |
 | Chrome | [Chrome Web Store](https://chromewebstore.google.com/detail/chatgpt-speed-booster/lalnlehliohjogjpelmggiligcmefmhn?hl=en)|
-
-<img width="1764" height="1308" alt="speed-booster-popup" src="https://github.com/user-attachments/assets/6720e0c3-2d5d-4a7d-930f-246984b39fa3" />
 
 ## Build it yourself
 
@@ -71,27 +71,54 @@ npm run safari:setup
 2. If it doesn't open automatically, open the Xcode project:
 
 ```bash
-open "safari-app/ChatGPT Speed Booster/ChatGPT Speed Booster.xcodeproj"
+open "safari-app/AI Chat Speed Booster/AI Chat Speed Booster.xcodeproj"
 ```
 
 3. In Xcode, select the **macOS app target** (not iOS, not extension target), then click **Run (▶)**.
 
-![Xcode macOS target](assets/docs/xcode-target.png)
+4. In Safari, open **Safari → Settings → Extensions** and enable **AI Chat Speed Booster**.
 
-After running, you may see a popup like this:
+5. Open a supported AI chat site to verify it is active.
 
-![Quit and Open Safari Settings popup](assets/docs/extension-popup.png)
+## Adding a new AI chat site
 
-1. In Safari, open **Safari → Settings → Extensions** and enable **ChatGPT Speed Booster**.
+All site definitions live in one file: [`sites.config.json`](sites.config.json).
 
-If it appears but stays disabled:
+To add a new site, add an entry to the array:
 
-![Disabled Safari extension](assets/docs/safari-extension.png)
+```json
+{
+    "id": "mysite",
+    "name": "My AI Chat",
+    "hostnames": ["mysite.com"],
+    "urlPatterns": ["*://mysite.com/*"],
+    "selectors": {
+        "messageTurn": ".message-selector",
+        "scrollContainer": ".scroll-container"
+    },
+    "messageIdAttribute": "data-message-id"
+}
+```
 
-Turn it on and allow it if Safari asks for permission.
+Then rebuild. The build script auto-injects the URL patterns into all browser manifests. No other files need to change.
 
-1. Open `https://chatgpt.com` to verify it is active.
-   You may have to allow it to run on that site if Safari prompts you. Maybe left of the address bar.
+### Finding the right selectors
+
+1. Open the AI chat in your browser
+2. Right-click on a message → Inspect
+3. Find the repeating element wrapping each message turn → that's `messageTurn`
+4. Find the scrollable container → that's `scrollContainer`
+5. If there's a fallback scroll container, add `scrollContainerAlt`
+6. If messages have a unique ID attribute, set `messageIdAttribute` (defaults to `data-testid`)
+
+### Currently supported sites
+
+| Site | Status |
+| ---- | ------ |
+| [ChatGPT](https://chatgpt.com) | ✅ Tested |
+| [Claude](https://claude.ai) | 🔧 Selectors may need adjustment |
+
+PRs to add or fix site configs are welcome.
 
 ## How it works
 
@@ -109,12 +136,72 @@ Set these from the popup:
 | Visible messages | 10      | 1-200 |
 | Load more batch  | 5       | 1-50  |
 
+## Testing
+
+Automated tests use [Playwright](https://playwright.dev/) to validate build outputs and run the real extension in headless Chromium against mock pages.
+
+### Run all tests
+
+```bash
+npm test
+```
+
+This builds all browser targets, validates every `dist/` output, then loads the extension in Chromium and verifies it works for each configured site (60 tests, ~7s).
+
+### Individual test suites
+
+```bash
+npm run test:build       # validate dist/ outputs only
+npm run test:extension   # extension tests on mock pages
+npm run test:integration # live site tests (requires auth, see below)
+```
+
+### Integration tests (live sites)
+
+To test against real sites with your account:
+
+1. Copy `.env.example` to `.env` and fill in your credentials  
+   (for ChatGPT via Google login, use your Google email/password)
+2. Run `npm run test:auth` — a browser opens, log in to each site, press Enter
+3. Run `npm run test:integration`
+
+The auth profile is saved to `tests/.auth-profile/` (git-ignored) and reused across runs.
+
+### Headless mode
+
+Set `HEADLESS=1` to run without a visible browser window:
+
+```bash
+HEADLESS=1 npm test
+```
+
 ## Browser support
 
 - Chrome
 - Firefox
 - Edge
 - Safari
+
+## Source code submission (Firefox)
+
+This project is built from TypeScript source files and bundled with esbuild.
+
+### Build environment
+
+- Operating systems: Linux, macOS, or Windows
+- Node.js: 18 or newer
+- npm: included with Node.js
+
+### Reproducible build steps (Firefox)
+
+```bash
+git clone https://github.com/Noah4ever/chatgpt-speed-booster.git
+cd chatgpt-speed-booster
+npm ci
+npm run build:firefox
+```
+
+The Firefox extension output is generated in `dist/firefox/`.
 
 ## Privacy
 

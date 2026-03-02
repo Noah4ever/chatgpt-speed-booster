@@ -1,4 +1,3 @@
-import { messageManager } from "./Singletons";
 import { CSS_PREFIX } from "../shared/constants";
 import { logger } from "../shared/logger";
 import { MessageMeta } from "../shared/types";
@@ -178,7 +177,10 @@ export class StatusIndicator {
     private lastScrollTop = -1;
     private lastScrollHeight = -1;
     private lastClientHeight = -1;
-    constructor() {
+    private readonly getMessagePositions: () => MessageMeta[];
+
+    constructor(getMessagePositions: () => MessageMeta[]) {
+        this.getMessagePositions = getMessagePositions;
         this.el = document.createElement("div");
         this.onScroll = this.onScroll.bind(this);
     }
@@ -370,7 +372,7 @@ export class StatusIndicator {
      */
     private updateCurrentLabel(): void {
         if (!this.scrollRoot || !this.label) return;
-        const messagePositions = messageManager.getMessagePositions();
+        const messagePositions = this.getMessagePositions();
         const visible = messagePositions.length;
         const current = this.getCurrentVisibleIndex(messagePositions);
         if (current == 0 || visible == 0)

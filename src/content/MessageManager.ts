@@ -4,18 +4,28 @@ import type {
     ExtensionStatus,
     MessageMeta,
 } from "../shared/types";
+import type { SiteSelectors } from "../shared/sites";
 import { DEFAULT_CONFIG, DATA_ATTR } from "../shared/constants";
 import { logger } from "../shared/logger";
-import { Selectors } from "./selectors";
 
 export class MessageManager {
     private messages: TrackedMessage[] = [];
     private config: ExtensionConfig = { ...DEFAULT_CONFIG };
+    private messageIdAttribute = "data-testid";
     private messagePositions: MessageMeta[] = [];
     private positionTimer: ReturnType<typeof setTimeout> | null = null;
+    private siteSelectors: SiteSelectors | null = null;
 
     private get visibleCount(): number {
         return this.messages.filter((m) => m.visible).length;
+    }
+
+    setMessageIdAttribute(attr: string): void {
+        this.messageIdAttribute = attr;
+    }
+
+    setSiteSelectors(selectors: SiteSelectors): void {
+        this.siteSelectors = selectors;
     }
 
     updateConfig(config: ExtensionConfig): void {
@@ -46,7 +56,7 @@ export class MessageManager {
     loadMore(): number {
         if (!this.config.enabled) return 0;
         const hidden = this.messages.filter((m) => !m.visible);
-        const toReveal = hidden.slice(-this.config.loadMoreBatchSize * 2); // Multiply by 2 since one conv = 1 user turn + 1 assistant reply
+        const toReveal = hidden.slice(-this.config.loadMoreBatchSize * 2);
         for (const msg of toReveal) this.showMessage(msg);
         logger.debug(`revealed ${toReveal.length} additional messages`);
         return toReveal.length;
@@ -137,16 +147,18 @@ export class MessageManager {
     }
 
     private deriveId(el: HTMLElement): string {
-        const testId = el.getAttribute("data-testid");
-        if (testId) return testId;
+        if (this.messageIdAttribute) {
+            const attrValue = el.getAttribute(this.messageIdAttribute);
+            if (attrValue) return attrValue;
+        }
         return `msg-${this.messages.length}-${Date.now()}`;
     }
 
     /**
-     * Recomputes ordered assistant-message bounds in scroll-root coordinates.
+     * Recomputes ordered message bounds in scroll-root coordinates.
      * Uses a tiny debounce so layout reads happen after DOM visibility updates settle.
      */
-    recomputeMessagePositions(delay: number = 1) {
+    recomputeMessagePositions(delay: number = 1): void {
         if (!this.config.showStatus) return;
 
         if (this.positionTimer) {
@@ -155,15 +167,8 @@ export class MessageManager {
 
         this.positionTimer = setTimeout(() => {
             this.positionTimer = null;
-            const scrollRoot =
-                document.querySelector<HTMLElement>("[data-scroll-root]") ??
-                document.querySelector<HTMLElement>(
-                    Selectors.scrollContainer,
-                ) ??
-                document.querySelector<HTMLElement>(
-                    Selectors.scrollContainerAlt,
-                );
 
+            const scrollRoot = this.findScrollRoot();
             if (!scrollRoot) {
                 this.messagePositions = [];
                 return;
@@ -175,8 +180,7 @@ export class MessageManager {
                 (m) =>
                     m.visible &&
                     m.element.isConnected &&
-                    m.element.style.display !== "none" &&
-                    m.element.matches(Selectors.replies),
+                    m.element.style.display !== "none",
             );
 
             this.messagePositions = visibleMessages
@@ -187,6 +191,20 @@ export class MessageManager {
                 })
                 .sort((a, b) => a.top - b.top);
         }, delay);
+    }
+
+    private findScrollRoot(): HTMLElement | null {
+        const dataRoot = document.querySelector<HTMLElement>("[data-scroll-root]");
+        if (dataRoot) return dataRoot;
+
+        if (this.siteSelectors) {
+            const primary = document.querySelector<HTMLElement>(this.siteSelectors.scrollContainer);
+            if (primary) return primary;
+            if (this.siteSelectors.scrollContainerAlt) {
+                return document.querySelector<HTMLElement>(this.siteSelectors.scrollContainerAlt);
+            }
+        }
+        return null;
     }
 
     getMessagePositions(): MessageMeta[] {
