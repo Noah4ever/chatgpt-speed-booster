@@ -3,6 +3,7 @@ import { DEFAULT_CONFIG, CONFIG_LIMITS } from "../shared/constants";
 import { MessageType, type ExtensionConfig, type ExtensionStatus } from "../shared/types";
 
 const toggleEnabled = document.getElementById("toggle-enabled") as HTMLInputElement;
+const toggleStatus = document.getElementById("toggle-status") as HTMLInputElement; //New toggle for the status indicator
 const visibleLimitInput = document.getElementById("visible-limit") as HTMLInputElement;
 const batchSizeInput = document.getElementById("batch-size") as HTMLInputElement;
 const saveBtn = document.getElementById("save-btn") as HTMLButtonElement;
@@ -18,6 +19,7 @@ async function init(): Promise<void> {
 
 function renderConfig(config: ExtensionConfig): void {
     toggleEnabled.checked = config.enabled;
+    toggleStatus.checked = config.showStatus;
     visibleLimitInput.value = String(config.visibleMessageLimit);
     batchSizeInput.value = String(config.loadMoreBatchSize);
     settingsSection.setAttribute("aria-disabled", String(!config.enabled));
@@ -26,10 +28,11 @@ function renderConfig(config: ExtensionConfig): void {
 async function refreshStatus(): Promise<void> {
     try {
         const status = await sendMessage<ExtensionStatus | undefined>({ type: MessageType.GET_STATUS });
+        // Divide by 2 since one conversations consists of user turn and assistant turn
         if (status && typeof status.totalMessages === "number") {
             statusText.textContent =
-                `${status.visibleMessages}/${status.totalMessages} messages visible` +
-                (status.hiddenMessages > 0 ? ` · ${status.hiddenMessages} hidden` : "");
+                `${status.visibleMessages/2}/${status.totalMessages/2} messages visible` +
+                (status.hiddenMessages > 0 ? ` · ${status.hiddenMessages/2} hidden` : "");
         } else {
             statusText.textContent = "Open a ChatGPT conversation to see status";
         }
@@ -48,6 +51,14 @@ function clampInput(input: HTMLInputElement, min: number, max: number): number {
 
 toggleEnabled.addEventListener("change", async () => {
     const config = await sendMessage<ExtensionConfig>({ type: MessageType.TOGGLE_ENABLED });
+    renderConfig(config);
+    await refreshStatus();
+});
+
+
+// Toggle status indicator
+toggleStatus.addEventListener("change", async () => {
+    const config = await sendMessage<ExtensionConfig>({ type: MessageType.TOGGLE_STATUS });
     renderConfig(config);
     await refreshStatus();
 });

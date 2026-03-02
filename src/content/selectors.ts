@@ -5,4 +5,5 @@ export const Selectors = Object.freeze({
     sendButton: '[data-testid="send-button"]',
     scrollContainer: 'div[class*="react-scroll-to-bottom"] > div[class*="flex"]',
     scrollContainerAlt: "main .overflow-y-auto",
+    replies: '[data-turn="assistant"]',
 });

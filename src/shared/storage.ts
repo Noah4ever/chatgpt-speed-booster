@@ -21,6 +21,7 @@ function sanitiseConfig(raw: Partial<ExtensionConfig> | undefined): ExtensionCon
             CONFIG_LIMITS.loadMoreBatchSize.max,
         ),
         enabled: typeof base.enabled === "boolean" ? base.enabled : DEFAULT_CONFIG.enabled,
+        showStatus: typeof base.showStatus === "boolean" ? base.showStatus : DEFAULT_CONFIG.showStatus,
     };
 }
 

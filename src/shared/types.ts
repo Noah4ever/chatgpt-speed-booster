@@ -4,6 +4,13 @@ export interface ExtensionConfig {
     readonly visibleMessageLimit: number;
     readonly loadMoreBatchSize: number;
     readonly enabled: boolean;
+    // Controls whether the floating in-page status indicator is rendered.
+    readonly showStatus: boolean;
+}
+
+export interface MessageMeta {
+    top: number;
+    bottom: number;
 }
 
 export interface TrackedMessage {
@@ -19,6 +26,7 @@ export enum MessageType {
     GET_STATUS = "GET_STATUS",
     STATUS_RESPONSE = "STATUS_RESPONSE",
     TOGGLE_ENABLED = "TOGGLE_ENABLED",
+    TOGGLE_STATUS = "TOGGLE_STATUS",
 }
 
 export interface ExtensionMessage {
@@ -51,4 +59,5 @@ export interface ExtensionStatus {
     readonly totalMessages: number;
     readonly visibleMessages: number;
     readonly hiddenMessages: number;
+    readonly showStatus: boolean; //New toggle for status indicator
 }

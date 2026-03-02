@@ -3,9 +3,11 @@ import type { ExtensionConfig } from "./types";
 export const STORAGE_KEY = "chatgpt_speed_booster_config" as const;
 
 export const DEFAULT_CONFIG: Readonly<ExtensionConfig> = Object.freeze({
-    visibleMessageLimit: 10,
-    loadMoreBatchSize: 5,
+    visibleMessageLimit: 3,
+    loadMoreBatchSize: 3,
     enabled: true,
+    // Enable the floating status indicator by default.
+    showStatus: true,
 });
 
 export const CONFIG_LIMITS = Object.freeze({

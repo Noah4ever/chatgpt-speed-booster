@@ -1,10 +1,18 @@
-import type { ExtensionConfig, TrackedMessage, ExtensionStatus } from "../shared/types";
+import type {
+    ExtensionConfig,
+    TrackedMessage,
+    ExtensionStatus,
+    MessageMeta,
+} from "../shared/types";
 import { DEFAULT_CONFIG, DATA_ATTR } from "../shared/constants";
 import { logger } from "../shared/logger";
+import { Selectors } from "./selectors";
 
 export class MessageManager {
     private messages: TrackedMessage[] = [];
     private config: ExtensionConfig = { ...DEFAULT_CONFIG };
+    private messagePositions: MessageMeta[] = [];
+    private positionTimer: ReturnType<typeof setTimeout> | null = null;
 
     private get visibleCount(): number {
         return this.messages.filter((m) => m.visible).length;
@@ -38,7 +46,7 @@ export class MessageManager {
     loadMore(): number {
         if (!this.config.enabled) return 0;
         const hidden = this.messages.filter((m) => !m.visible);
-        const toReveal = hidden.slice(-this.config.loadMoreBatchSize);
+        const toReveal = hidden.slice(-this.config.loadMoreBatchSize * 2); // Multiply by 2 since one conv = 1 user turn + 1 assistant reply
         for (const msg of toReveal) this.showMessage(msg);
         logger.debug(`revealed ${toReveal.length} additional messages`);
         return toReveal.length;
@@ -56,6 +64,7 @@ export class MessageManager {
             totalMessages: total,
             visibleMessages: visible,
             hiddenMessages: total - visible,
+            showStatus: this.config.showStatus,
         };
     }
 
@@ -80,7 +89,7 @@ export class MessageManager {
             return;
         }
 
-        const limit = this.config.visibleMessageLimit;
+        const limit = this.config.visibleMessageLimit * 2;
         const total = this.messages.length;
 
         for (let i = 0; i < total; i++) {
@@ -93,9 +102,13 @@ export class MessageManager {
         }
     }
 
+    /**
+     * Preserves the visible window size during incremental additions by hiding
+     * oldest currently-visible turns first.
+     */
     private enforceLimit(): void {
         if (!this.config.enabled) return;
-        let excess = this.visibleCount - this.config.visibleMessageLimit;
+        let excess = this.visibleCount - this.config.visibleMessageLimit * 2;
         for (const msg of this.messages) {
             if (excess <= 0) break;
             if (msg.visible) {
@@ -127,5 +140,71 @@ export class MessageManager {
         const testId = el.getAttribute("data-testid");
         if (testId) return testId;
         return `msg-${this.messages.length}-${Date.now()}`;
+    }
+
+    /**
+     * Recomputes ordered assistant-message bounds in scroll-root coordinates.
+     * Uses a tiny debounce so layout reads happen after DOM visibility updates settle.
+     */
+    recomputeMessagePositions(delay: number = 1) {
+        if (!this.config.showStatus) return;
+
+        if (this.positionTimer) {
+            clearTimeout(this.positionTimer);
+        }
+
+        this.positionTimer = setTimeout(() => {
+            this.positionTimer = null;
+            const scrollRoot =
+                document.querySelector<HTMLElement>("[data-scroll-root]") ??
+                document.querySelector<HTMLElement>(
+                    Selectors.scrollContainer,
+                ) ??
+                document.querySelector<HTMLElement>(
+                    Selectors.scrollContainerAlt,
+                );
+
+            if (!scrollRoot) {
+                this.messagePositions = [];
+                return;
+            }
+
+            const rootRect = scrollRoot.getBoundingClientRect();
+            const rootScrollTop = scrollRoot.scrollTop;
+            const visibleMessages = this.messages.filter(
+                (m) =>
+                    m.visible &&
+                    m.element.isConnected &&
+                    m.element.style.display !== "none" &&
+                    m.element.matches(Selectors.replies),
+            );
+
+            this.messagePositions = visibleMessages
+                .map(({ element }) => {
+                    const rect = element.getBoundingClientRect();
+                    const top = rect.top - rootRect.top + rootScrollTop;
+                    return { top, bottom: top + rect.height };
+                })
+                .sort((a, b) => a.top - b.top);
+        }, delay);
+    }
+
+    getMessagePositions(): MessageMeta[] {
+        return this.messagePositions;
+    }
+
+    /**
+     * Anchor id for incremental DOMObserver turn resolution.
+     */
+    getLastTrackedMessageId(): string | null {
+        const last = this.messages[this.messages.length - 1];
+        return last?.id ?? null;
+    }
+
+    /**
+     * Used by DOMObserver to prevent re-adding already tracked turns.
+     */
+    hasTrackedMessageId(id: string): boolean {
+        return this.messages.some((m) => m.id === id);
     }
 }

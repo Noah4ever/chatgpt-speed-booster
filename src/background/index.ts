@@ -39,6 +39,14 @@ onMessage(async (message): Promise<unknown> => {
             return updated;
         }
 
+        //New message type for the status indicator
+        case MessageType.TOGGLE_STATUS: {
+            const current = await loadConfig();
+            const updated = await saveConfig({ showStatus: !current.showStatus });
+            await broadcastToContentScripts({ type: MessageType.CONFIG_UPDATED, payload: updated });
+            return updated;
+        }
+
         default:
             return undefined;
     }

@@ -1,5 +1,7 @@
+import { messageManager } from "./Singletons";
 import { CSS_PREFIX } from "../shared/constants";
 import { logger } from "../shared/logger";
+import { MessageMeta } from "../shared/types";
 
 export type LoadMoreHandler = () => void;
 
@@ -48,7 +50,10 @@ export class LoadMoreButton {
 
         this.updateLabel();
 
-        if (firstVisibleElement && firstVisibleElement.parentElement === anchorParent) {
+        if (
+            firstVisibleElement &&
+            firstVisibleElement.parentElement === anchorParent
+        ) {
             anchorParent.insertBefore(this.container, firstVisibleElement);
         } else {
             anchorParent.prepend(this.container);
@@ -78,9 +83,9 @@ export class LoadMoreButton {
             justifyContent: "center",
             alignItems: "center",
             padding: "12px 16px",
-            margin: "4px 0",
+            margin: "4px 15px 4px 0px", //ChatGPT's UI has a 15px gap on the left
             borderRadius: "8px",
-            background: "rgba(142, 142, 160, 0.08)",
+            background: "#323232d9", //ChatGPT's --message-surface var
             backdropFilter: "blur(4px)",
             transition: "opacity 0.2s ease",
         } satisfies Partial<CSSStyleDeclaration>);
@@ -99,25 +104,36 @@ export class LoadMoreButton {
             borderRadius: "6px",
             fontSize: "13px",
             fontWeight: "500",
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-            color: "var(--text-primary, #d1d5db)",
+            fontFamily:
+                '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+            color: "var(--text-muted, #d1d5db)",
             background: "var(--surface-tertiary, rgba(255,255,255,0.06))",
             border: "1px solid var(--border-medium, rgba(255,255,255,0.1))",
-            transition: "background 0.15s ease, transform 0.1s ease",
+            transition:
+                "background 0.15s ease, transform 0.1s ease, color 0.1s ease",
         } satisfies Partial<CSSStyleDeclaration>);
 
         button.addEventListener("mouseenter", () => {
-            button.style.background = "var(--surface-tertiary-hover, rgba(255,255,255,0.12))";
+            // button.style.background = "var(--surface-tertiary-hover, rgba(255,255,255,0.12))";
+            button.style.color = "var(--text-foreground)";
         });
         button.addEventListener("mouseleave", () => {
-            button.style.background = "var(--surface-tertiary, rgba(255,255,255,0.06))";
+            // button.style.background = "var(--surface-tertiary, rgba(255,255,255,0.06))";
+            button.style.color = "var(--text-muted, #d1d5dba2)";
         });
-        button.addEventListener("mousedown", () => { button.style.transform = "scale(0.97)"; });
-        button.addEventListener("mouseup", () => { button.style.transform = "scale(1)"; });
+        button.addEventListener("mousedown", () => {
+            button.style.transform = "scale(0.97)";
+        });
+        button.addEventListener("mouseup", () => {
+            button.style.transform = "scale(1)";
+        });
 
         const icon = document.createElement("span");
         icon.setAttribute("aria-hidden", "true");
-        Object.assign(icon.style, { display: "inline-flex", alignItems: "center" });
+        Object.assign(icon.style, {
+            display: "inline-flex",
+            alignItems: "center",
+        });
         icon.appendChild(createArrowUpIcon());
 
         const label = document.createElement("span");
@@ -132,9 +148,11 @@ export class LoadMoreButton {
     }
 
     private updateLabel(): void {
-        const label = this.container?.querySelector<HTMLElement>(`.${CSS_PREFIX}-load-more-label`);
+        const label = this.container?.querySelector<HTMLElement>(
+            `.${CSS_PREFIX}-load-more-label`,
+        );
         if (label) {
-            label.textContent = `Load more (${this.hiddenCount} hidden)`;
+            label.textContent = `Load more (${this.hiddenCount / 2} hidden)`;
         }
     }
 
@@ -147,19 +165,59 @@ export class LoadMoreButton {
 
 export class StatusIndicator {
     private container: HTMLElement | null = null;
+    private ticking = false;
+    private el: HTMLElement;
+    private scrollRoot: HTMLElement | null = null;
+    private label: HTMLElement | null = null;
+    private suffix = "th";
+    private labelUpdateTimer: ReturnType<typeof setTimeout> | null = null;
+    private prev: number = 0; // To store the previous index for edge-cases
+    private prev2: number = 0;
+    private indicatorHalfHeight = 0;
+    private thumbMonitorTimer: ReturnType<typeof setInterval> | null = null;
+    private lastScrollTop = -1;
+    private lastScrollHeight = -1;
+    private lastClientHeight = -1;
+    constructor() {
+        this.el = document.createElement("div");
+        this.onScroll = this.onScroll.bind(this);
+    }
 
-    show(visible: number, total: number): void {
+    show(visible: number, current: number): void {
         if (!this.container) {
-            this.container = this.createElement();
-            document.body.appendChild(this.container);
+            this.initStatus();
         }
-        const label = this.container.querySelector<HTMLElement>(`.${CSS_PREFIX}-status-label`);
-        if (label) {
-            label.textContent = `${visible}/${total} messages`;
+
+        this.suffix = this.getOrdinalSuffix(current);
+
+        if (this.label) {
+            this.label.textContent = `${current}${this.suffix} of ${visible} msgs`;
+        }
+    }
+
+    getOrdinalSuffix(n: number): string {
+        const lastTwo = n % 100;
+        if (lastTwo >= 11 && lastTwo <= 13) return "th";
+
+        switch (n % 10) {
+            case 1:
+                return "st";
+            case 2:
+                return "nd";
+            case 3:
+                return "rd";
+            default:
+                return "th";
         }
     }
 
     hide(): void {
+        this.scrollRoot?.removeEventListener("scroll", this.onScroll);
+        this.stopThumbMonitor();
+        if (this.labelUpdateTimer) {
+            clearTimeout(this.labelUpdateTimer);
+            this.labelUpdateTimer = null;
+        }
         this.container?.remove();
         this.container = null;
     }
@@ -168,21 +226,37 @@ export class StatusIndicator {
         this.hide();
     }
 
+    // Lazily creates and mounts the status indicator, then wires scroll tracking once.
+    initStatus(): void {
+        if (!this.container) {
+            this.container = this.createElement();
+            document.body.appendChild(this.container);
+
+            this.initScrollRoot();
+            this.scrollRoot?.addEventListener("scroll", this.onScroll);
+            this.startThumbMonitor();
+            this.label = this.container.querySelector<HTMLElement>(
+                `.${CSS_PREFIX}-status-label`,
+            );
+            this.scheduleLabelUpdate(); // initial position
+        }
+    }
+
     private createElement(): HTMLElement {
-        const el = document.createElement("div");
-        el.className = `${CSS_PREFIX}-status-indicator`;
-        el.setAttribute("role", "status");
-        el.setAttribute("aria-live", "polite");
-        Object.assign(el.style, {
+        this.el.className = `${CSS_PREFIX}-status-indicator`;
+        this.el.setAttribute("role", "status");
+        this.el.setAttribute("aria-live", "polite");
+
+        Object.assign(this.el.style, {
             position: "fixed",
-            bottom: "80px",
-            right: "20px",
+            right: "15px",
             zIndex: "10000",
             padding: "6px 12px",
             borderRadius: "6px",
             fontSize: "11px",
             fontWeight: "500",
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+            fontFamily:
+                '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
             color: "var(--text-secondary, #9ca3af)",
             background: "var(--surface-secondary, rgba(0,0,0,0.6))",
             backdropFilter: "blur(8px)",
@@ -194,7 +268,162 @@ export class StatusIndicator {
 
         const label = document.createElement("span");
         label.className = `${CSS_PREFIX}-status-label`;
-        el.appendChild(label);
-        return el;
+        this.el.appendChild(label);
+
+        return this.el;
+    }
+
+    private initScrollRoot() {
+        this.scrollRoot =
+            document.querySelector<HTMLElement>("[data-scroll-root]");
+    }
+
+    private onScroll() {
+        this.scheduleLabelUpdate();
+        if (!this.ticking) {
+            requestAnimationFrame(() => this.updatePosition());
+            this.ticking = true;
+        }
+    }
+
+    /**
+     * Starts a lightweight polling fallback so indicator state also updates when
+     * content growth moves the scrollbar thumb without emitting a scroll event.
+     */
+    private startThumbMonitor(): void {
+        if (this.thumbMonitorTimer || !this.scrollRoot) return;
+        this.cacheThumbMetrics();
+        this.thumbMonitorTimer = setInterval(() => {
+            if (!this.scrollRoot) return;
+            if (!this.didThumbMetricsChange()) return;
+            this.cacheThumbMetrics();
+            this.updatePosition();
+            this.scheduleLabelUpdate();
+        }, 120);
+    }
+
+    private stopThumbMonitor(): void {
+        if (this.thumbMonitorTimer) {
+            clearInterval(this.thumbMonitorTimer);
+            this.thumbMonitorTimer = null;
+        }
+    }
+
+    /**
+     * Detects thumb movement from either user scroll or passive layout/content changes.
+     */
+    private didThumbMetricsChange(): boolean {
+        if (!this.scrollRoot) return false;
+        return (
+            this.scrollRoot.scrollTop !== this.lastScrollTop ||
+            this.scrollRoot.scrollHeight !== this.lastScrollHeight ||
+            this.scrollRoot.clientHeight !== this.lastClientHeight
+        );
+    }
+
+    private cacheThumbMetrics(): void {
+        if (!this.scrollRoot) return;
+        this.lastScrollTop = this.scrollRoot.scrollTop;
+        this.lastScrollHeight = this.scrollRoot.scrollHeight;
+        this.lastClientHeight = this.scrollRoot.clientHeight;
+    }
+
+    // Repositions the floating status indicator to track the scrollbar thumb center.
+    updatePosition() {
+        try {
+            if (!this.scrollRoot) return;
+
+            const scrollTop = this.scrollRoot.scrollTop;
+            const viewport = this.scrollRoot.clientHeight;
+            const content = this.scrollRoot.scrollHeight;
+
+            if (content <= 0) return;
+            if (!this.indicatorHalfHeight) {
+                this.indicatorHalfHeight = this.el.offsetHeight / 2;
+            }
+
+            // Equivalent thumb center
+            const thumbCenter =
+                (viewport * (scrollTop + viewport / 2)) / content;
+            const y = thumbCenter - this.indicatorHalfHeight;
+            this.el.style.top = `${y}px`;
+        } finally {
+            this.ticking = false;
+        }
+    }
+
+    /**
+     * Defers expensive index text recomputation until scroll/geometry activity settles.
+     */
+    scheduleLabelUpdate(): void {
+        if (this.labelUpdateTimer) {
+            clearTimeout(this.labelUpdateTimer);
+        }
+        this.labelUpdateTimer = setTimeout(() => {
+            this.labelUpdateTimer = null;
+            this.updateCurrentLabel();
+        }, 100);
+    }
+
+    /**
+     * Derives and renders the textual status from cached assistant-message bounds.
+     */
+    private updateCurrentLabel(): void {
+        if (!this.scrollRoot || !this.label) return;
+        const messagePositions = messageManager.getMessagePositions();
+        const visible = messagePositions.length;
+        const current = this.getCurrentVisibleIndex(messagePositions);
+        if (current == 0 || visible == 0)
+            setTimeout(() => {
+                this.updateCurrentLabel(); // Loop until none of them are 0
+            }, 100);
+        this.suffix = this.getOrdinalSuffix(current);
+        this.label.textContent = `${current}${this.suffix} of ${visible} msgs`;
+    }
+
+    /**
+     * Binary-searches visible message bounds to find the last message intersecting
+     * the viewport. Returns a 1-based index for user-facing display.
+     */
+    getCurrentVisibleIndex(messagePositions: MessageMeta[]): number {
+        if (!this.scrollRoot) return 0;
+
+        const scrollTop = this.scrollRoot.scrollTop;
+        const viewportBottom = scrollTop + this.scrollRoot.clientHeight;
+
+        let left = 0;
+        let right = messagePositions.length - 1;
+        let result = 0;
+
+        while (left <= right) {
+            const mid = (left + right) >> 1;
+            const { top, bottom } = messagePositions[mid];
+
+            if (bottom > scrollTop && top < viewportBottom) {
+                result = mid + 1;
+                left = mid + 1;
+            } else if (top >= viewportBottom) {
+                right = mid - 1;
+            } else {
+                left = mid + 1;
+            }
+        }
+
+        //Edge-case correction; for when the visible message is the user prompt only.
+        if (result === 0 && this.prev !== 0) {
+            const direction =
+                this.prev > this.prev2 ? 1 : this.prev < this.prev2 ? -1 : 0;
+            result = this.prev + direction;
+            if (result < 1) result = 1;
+            else if (result > messagePositions.length)
+                result = messagePositions.length;
+        }
+
+        if (result !== 0) {
+            this.prev2 = this.prev;
+            this.prev = result;
+        }
+
+        return result;
     }
 }
