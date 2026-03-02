@@ -38,7 +38,10 @@ async function bootstrap(): Promise<void> {
     }
 
     loadMoreButton = new LoadMoreButton(handleLoadMore);
-    statusIndicator = new StatusIndicator(() => messageManager.getMessagePositions());
+    statusIndicator = new StatusIndicator(
+        currentSite.selectors.scrollContainer,
+        () => messageManager.getMessagePositions(),
+    );
 
     if (!config.showStatus) statusIndicator.hide();
 

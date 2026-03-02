@@ -31,7 +31,7 @@
             <div class="setting">
                 <div class="setting__info">
                     <span class="setting__label" id="visible-limit-label">Visible messages</span>
-                    <span class="setting__hint">Messages shown at once</span>
+                    <span class="setting__hint">Conversations shown at once</span>
                 </div>
                 <input type="number" id="visible-limit" class="setting__input" min="1" max="200" step="1"
                     aria-labelledby="visible-limit-label">
@@ -39,26 +39,22 @@
             <div class="setting">
                 <div class="setting__info">
                     <span class="setting__label" id="batch-size-label">Batch size</span>
-                    <span class="setting__hint">Loaded per click</span>
+                    <span class="setting__hint">Revealed per "Load More"</span>
                 </div>
                 <input type="number" id="batch-size" class="setting__input" min="1" max="50" step="1"
                     aria-labelledby="batch-size-label">
             </div>
-
-            <!-- New toggle button for the status indicator -->
             <div class="setting">
-                <span>Toggle status indicator</span>
+                <div class="setting__info">
+                    <span class="setting__label">Status indicator</span>
+                    <span class="setting__hint">Floating position label</span>
+                </div>
                 <label class="toggle" aria-label="Enable or disable status indicator">
                     <input type="checkbox" id="toggle-status" class="toggle__input">
                     <span class="toggle__slider"></span>
                 </label>
             </div>
         </section>
-
-        <footer class="popup-footer">
-            <button id="save-btn" class="btn btn--primary" type="button">Save</button>
-            <button id="reset-btn" class="btn btn--secondary" type="button">Reset</button>
-        </footer>
     </div>
 
     <script src="popup.js"></script>

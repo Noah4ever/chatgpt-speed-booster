@@ -178,8 +178,10 @@ export class StatusIndicator {
     private lastScrollHeight = -1;
     private lastClientHeight = -1;
     private readonly getMessagePositions: () => MessageMeta[];
+    private readonly scrollContainerSelector: string;
 
-    constructor(getMessagePositions: () => MessageMeta[]) {
+    constructor(scrollContainerSelector: string, getMessagePositions: () => MessageMeta[]) {
+        this.scrollContainerSelector = scrollContainerSelector;
         this.getMessagePositions = getMessagePositions;
         this.el = document.createElement("div");
         this.onScroll = this.onScroll.bind(this);
@@ -277,6 +279,7 @@ export class StatusIndicator {
 
     private initScrollRoot() {
         this.scrollRoot =
+            document.querySelector<HTMLElement>(this.scrollContainerSelector) ??
             document.querySelector<HTMLElement>("[data-scroll-root]");
     }
 
