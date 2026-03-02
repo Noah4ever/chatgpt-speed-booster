@@ -278,9 +278,38 @@ export class StatusIndicator {
     }
 
     private initScrollRoot() {
-        this.scrollRoot =
+        const candidate =
             document.querySelector<HTMLElement>(this.scrollContainerSelector) ??
             document.querySelector<HTMLElement>("[data-scroll-root]");
+        if (!candidate) return;
+
+        // The configured selector may point to a wrapper that doesn't scroll
+        // itself (e.g. ChatGPT's <main>). Walk descendants to find the element
+        // that actually overflows vertically.
+        this.scrollRoot = this.findActualScroller(candidate) ?? candidate;
+    }
+
+    /**
+     * Walks the candidate and its descendants (BFS, max 2 levels) to find an
+     * element whose scrollHeight exceeds clientHeight — the actual scroller.
+     */
+    private findActualScroller(root: HTMLElement): HTMLElement | null {
+        if (root.scrollHeight > root.clientHeight + 1) return root;
+        const queue: HTMLElement[] = Array.from(root.children).filter(
+            (c): c is HTMLElement => c instanceof HTMLElement,
+        );
+        for (const child of queue) {
+            if (child.scrollHeight > child.clientHeight + 1) return child;
+            for (const grandchild of child.children) {
+                if (
+                    grandchild instanceof HTMLElement &&
+                    grandchild.scrollHeight > grandchild.clientHeight + 1
+                ) {
+                    return grandchild;
+                }
+            }
+        }
+        return null;
     }
 
     private onScroll() {
