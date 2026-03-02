@@ -19,7 +19,6 @@ let statusIndicator: StatusIndicator;
 let domObserver: DOMObserver;
 let conversationRetryTimer: ReturnType<typeof setTimeout> | null = null;
 let previousMessageElements: Set<HTMLElement> = new Set();
-let recomputeRafId: number | null = null;
 
 async function bootstrap(): Promise<void> {
     const site = detectCurrentSite();
@@ -32,16 +31,12 @@ async function bootstrap(): Promise<void> {
 
     config = await loadConfig();
     messageManager.updateConfig(config);
-    messageManager.setSiteSelectors(currentSite.selectors);
     if (currentSite.messageIdAttribute) {
         messageManager.setMessageIdAttribute(currentSite.messageIdAttribute);
     }
 
     loadMoreButton = new LoadMoreButton(handleLoadMore);
-    statusIndicator = new StatusIndicator(
-        currentSite.selectors.scrollContainer,
-        () => messageManager.getMessagePositions(),
-    );
+    statusIndicator = new StatusIndicator();
 
     if (!config.showStatus) statusIndicator.hide();
 
@@ -80,14 +75,12 @@ function scheduleInitialScan(): void {
         if (existing.length > 0) {
             messageManager.initialise(existing);
             refreshUI();
-            scheduleRecomputePositions();
             logger.info(`initial scan: ${existing.length} messages`);
             return;
         }
         setTimeout(attempt, 500);
     };
     attempt();
-    statusIndicator.initStatus();
 }
 
 /**
@@ -96,7 +89,6 @@ function scheduleInitialScan(): void {
 function handleMessagesAdded(elements: HTMLElement[]): void {
     messageManager.addMessages(elements);
     refreshUI();
-    scheduleRecomputePositions();
 }
 
 /**
@@ -105,7 +97,6 @@ function handleMessagesAdded(elements: HTMLElement[]): void {
 function handleMessagesRemoved(elements: HTMLElement[]): void {
     messageManager.removeMessages(elements);
     refreshUI();
-    scheduleRecomputePositions();
 }
 
 /**
@@ -143,7 +134,6 @@ function handleConversationChanged(): void {
             messageManager.initialise(messages);
             previousMessageElements = new Set();
             refreshUI();
-            scheduleRecomputePositions();
             conversationRetryTimer = null;
             if (messages.length > 0) {
                 logger.debug(`re-initialised with ${messages.length} messages after ${retries} retries`);
@@ -160,7 +150,6 @@ function handleConfigUpdated(newConfig: ExtensionConfig): void {
     config = newConfig;
     messageManager.updateConfig(config);
     refreshUI();
-    scheduleRecomputePositions();
     logger.debug("config updated from external source");
 }
 
@@ -177,24 +166,7 @@ function handleLoadMore(): void {
     const revealed = messageManager.loadMore();
     if (revealed > 0) {
         refreshUI();
-        scheduleRecomputePositions(0);
-
-        setTimeout(() => {
-            statusIndicator.updatePosition();
-            statusIndicator.scheduleLabelUpdate();
-        }, 1);
     }
-}
-
-/* Coalesces multiple update triggers into one layout pass so positions are computed
- * only after DOM visibility changes have been applied.
- */
-function scheduleRecomputePositions(delay?: number): void {
-    if (recomputeRafId != null) return;
-    recomputeRafId = requestAnimationFrame(() => {
-        messageManager.recomputeMessagePositions(delay);
-        recomputeRafId = null;
-    });
 }
 
 /**
@@ -215,10 +187,10 @@ function refreshUI(): void {
         loadMoreButton.hide();
     }
 
-    if (!config.enabled || !config.showStatus || status.totalMessages == 0) {
+    if (!config.enabled || !config.showStatus || status.totalMessages === 0) {
         statusIndicator.hide();
     } else {
-        statusIndicator.initStatus();
+        statusIndicator.update(status.hiddenMessages, status.totalMessages);
     }
 }
 
@@ -239,10 +211,6 @@ window.addEventListener("beforeunload", () => {
     if (conversationRetryTimer) {
         clearTimeout(conversationRetryTimer);
         conversationRetryTimer = null;
-    }
-    if (recomputeRafId != null) {
-        cancelAnimationFrame(recomputeRafId);
-        recomputeRafId = null;
     }
     domObserver.stop();
     messageManager.destroy();

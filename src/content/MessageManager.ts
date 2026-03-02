@@ -2,9 +2,7 @@ import type {
     ExtensionConfig,
     TrackedMessage,
     ExtensionStatus,
-    MessageMeta,
 } from "../shared/types";
-import type { SiteSelectors } from "../shared/sites";
 import { DEFAULT_CONFIG, DATA_ATTR } from "../shared/constants";
 import { logger } from "../shared/logger";
 
@@ -12,9 +10,6 @@ export class MessageManager {
     private messages: TrackedMessage[] = [];
     private config: ExtensionConfig = { ...DEFAULT_CONFIG };
     private messageIdAttribute = "data-testid";
-    private messagePositions: MessageMeta[] = [];
-    private positionTimer: ReturnType<typeof setTimeout> | null = null;
-    private siteSelectors: SiteSelectors | null = null;
 
     private get visibleCount(): number {
         return this.messages.filter((m) => m.visible).length;
@@ -22,10 +17,6 @@ export class MessageManager {
 
     setMessageIdAttribute(attr: string): void {
         this.messageIdAttribute = attr;
-    }
-
-    setSiteSelectors(selectors: SiteSelectors): void {
-        this.siteSelectors = selectors;
     }
 
     updateConfig(config: ExtensionConfig): void {
@@ -45,7 +36,7 @@ export class MessageManager {
             if (this.findByElement(el)) continue;
             this.trackElement(el);
         }
-        this.enforceLimit();
+        this.recalculateVisibility();
     }
 
     removeMessages(elements: HTMLElement[]): void {
@@ -112,31 +103,13 @@ export class MessageManager {
         }
     }
 
-    /**
-     * Preserves the visible window size during incremental additions by hiding
-     * oldest currently-visible turns first.
-     */
-    private enforceLimit(): void {
-        if (!this.config.enabled) return;
-        let excess = this.visibleCount - this.config.visibleMessageLimit * 2;
-        for (const msg of this.messages) {
-            if (excess <= 0) break;
-            if (msg.visible) {
-                this.hideMessage(msg);
-                excess--;
-            }
-        }
-    }
-
     private hideMessage(msg: TrackedMessage): void {
-        if (!msg.visible) return;
         msg.visible = false;
         msg.element.style.display = "none";
         msg.element.setAttribute("aria-hidden", "true");
     }
 
     private showMessage(msg: TrackedMessage): void {
-        if (msg.visible) return;
         msg.visible = true;
         msg.element.style.display = "";
         msg.element.removeAttribute("aria-hidden");
@@ -152,63 +125,6 @@ export class MessageManager {
             if (attrValue) return attrValue;
         }
         return `msg-${this.messages.length}-${Date.now()}`;
-    }
-
-    /**
-     * Recomputes ordered message bounds in scroll-root coordinates.
-     * Uses a tiny debounce so layout reads happen after DOM visibility updates settle.
-     */
-    recomputeMessagePositions(delay: number = 1): void {
-        if (!this.config.showStatus) return;
-
-        if (this.positionTimer) {
-            clearTimeout(this.positionTimer);
-        }
-
-        this.positionTimer = setTimeout(() => {
-            this.positionTimer = null;
-
-            const scrollRoot = this.findScrollRoot();
-            if (!scrollRoot) {
-                this.messagePositions = [];
-                return;
-            }
-
-            const rootRect = scrollRoot.getBoundingClientRect();
-            const rootScrollTop = scrollRoot.scrollTop;
-            const visibleMessages = this.messages.filter(
-                (m) =>
-                    m.visible &&
-                    m.element.isConnected &&
-                    m.element.style.display !== "none",
-            );
-
-            this.messagePositions = visibleMessages
-                .map(({ element }) => {
-                    const rect = element.getBoundingClientRect();
-                    const top = rect.top - rootRect.top + rootScrollTop;
-                    return { top, bottom: top + rect.height };
-                })
-                .sort((a, b) => a.top - b.top);
-        }, delay);
-    }
-
-    private findScrollRoot(): HTMLElement | null {
-        const dataRoot = document.querySelector<HTMLElement>("[data-scroll-root]");
-        if (dataRoot) return dataRoot;
-
-        if (this.siteSelectors) {
-            const primary = document.querySelector<HTMLElement>(this.siteSelectors.scrollContainer);
-            if (primary) return primary;
-            if (this.siteSelectors.scrollContainerAlt) {
-                return document.querySelector<HTMLElement>(this.siteSelectors.scrollContainerAlt);
-            }
-        }
-        return null;
-    }
-
-    getMessagePositions(): MessageMeta[] {
-        return this.messagePositions;
     }
 
     /**

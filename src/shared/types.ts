@@ -8,11 +8,6 @@ export interface ExtensionConfig {
     readonly showStatus: boolean;
 }
 
-export interface MessageMeta {
-    top: number;
-    bottom: number;
-}
-
 export interface TrackedMessage {
     readonly id: string;
     readonly element: HTMLElement;

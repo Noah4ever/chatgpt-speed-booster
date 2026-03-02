@@ -106,8 +106,10 @@ for (const site of SITES) {
             await loadMockPage(page);
 
             await expect(page.locator(".acsb-status-indicator")).toBeVisible();
-            // Status uses ordinal format: "Nth of M msgs"
-            await expect(page.locator(".acsb-status-label")).not.toBeEmpty();
+            const hiddenCount = MESSAGE_COUNT - DEFAULT_VISIBLE_LIMIT;
+            await expect(page.locator(".acsb-status-label")).toContainText(
+                `${hiddenCount} hidden`,
+            );
         });
 
         test("no errors in extension service worker", async ({ extensionContext }) => {
