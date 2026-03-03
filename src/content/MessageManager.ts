@@ -10,6 +10,7 @@ export class MessageManager {
     private messages: TrackedMessage[] = [];
     private config: ExtensionConfig = { ...DEFAULT_CONFIG };
     private messageIdAttribute = "data-testid";
+    private cachedVisibleCount: number = 0; // Store the count of currently visible messages before loading more messages
 
     private get visibleCount(): number {
         return this.messages.filter((m) => m.visible).length;
@@ -49,6 +50,7 @@ export class MessageManager {
         const hidden = this.messages.filter((m) => !m.visible);
         const toReveal = hidden.slice(-this.config.loadMoreBatchSize * 2);
         for (const msg of toReveal) this.showMessage(msg);
+        this.cachedVisibleCount = this.visibleCount; // Preserve currently visible messages when user sends new prompt
         logger.debug(`revealed ${toReveal.length} additional messages`);
         return toReveal.length;
     }
@@ -76,6 +78,7 @@ export class MessageManager {
             msg.element.removeAttribute(DATA_ATTR);
         }
         this.messages = [];
+        this.cachedVisibleCount = 0; // Reset the cached "load more" visible-count.
         logger.debug("MessageManager destroyed");
     }
 
@@ -90,8 +93,8 @@ export class MessageManager {
             for (const msg of this.messages) this.showMessage(msg);
             return;
         }
-
-        const limit = this.config.visibleMessageLimit * 2;
+        // If "load more" is ever clicked, cachedVisibleCount will store the new limit for the current session and will be used
+        const limit = Math.max(this.cachedVisibleCount, this.config.visibleMessageLimit * 2); 
         const total = this.messages.length;
 
         for (let i = 0; i < total; i++) {

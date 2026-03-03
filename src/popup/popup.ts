@@ -39,7 +39,9 @@ async function refreshStatus(): Promise<void> {
             statusText.textContent =
                 `${status.visibleMessages / 2}/${status.totalMessages / 2} messages visible` +
                 (status.hiddenMessages > 0 ? ` · ${status.hiddenMessages / 2} hidden` : "");
+                settingsSection.style.display = "auto"; // Show if the site is a valid site
         } else {
+            settingsSection.style.display = "none"; // Hide if the site is not a valid site
             statusText.textContent = "Open a supported AI chat to see status";
         }
     } catch {

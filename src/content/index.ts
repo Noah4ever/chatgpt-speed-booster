@@ -35,8 +35,8 @@ async function bootstrap(): Promise<void> {
         messageManager.setMessageIdAttribute(currentSite.messageIdAttribute);
     }
 
-    loadMoreButton = new LoadMoreButton(handleLoadMore);
-    statusIndicator = new StatusIndicator();
+    loadMoreButton = new LoadMoreButton(handleLoadMore, currentSite.name.toLowerCase()); // Pass the site name to adjust the load button's styling
+    statusIndicator = new StatusIndicator(currentSite.name.toLowerCase()); // Pass the site name to adjust the status indicator's styling
 
     if (!config.showStatus) statusIndicator.hide();
 
