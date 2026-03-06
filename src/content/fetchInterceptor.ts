@@ -66,8 +66,14 @@ interface SiteEntry {
 
 const BRIDGE_KEY = "acsb_bridge_config";
 const PREFIX = "[ACSB Fetch]";
-/** Set by the interceptor when it trims a response, read by the content script. */
-const TRIMMED_KEY = "acsb_fetch_was_trimmed";
+/**
+ * DOM attribute on <html> set by the interceptor when it trims a response.
+ * Read by the content script (ISOLATED world).  Using a DOM attribute instead
+ * of localStorage because the DOM is shared instantly between MAIN and ISOLATED
+ * worlds, whereas localStorage writes from MAIN are not always visible in
+ * ISOLATED world synchronously.
+ */
+const TRIMMED_ATTR = "data-acsb-trimmed";
 /** One-shot: content script sets this before reload to skip trimming once. */
 const BYPASS_KEY = "acsb_skip_trim_once";
 
@@ -145,7 +151,7 @@ const BUFFER_ROUNDS = 10;
         // One-shot bypass: content script requested a full reload
         if (localStorage.getItem(BYPASS_KEY) === "true") {
             localStorage.removeItem(BYPASS_KEY);
-            localStorage.removeItem(TRIMMED_KEY);
+            document.documentElement.removeAttribute(TRIMMED_ATTR);
             if (__DEV__) console.debug(PREFIX, "one-shot bypass active, skipping trim");
             return originalFetch.call(this, input, init);
         }
@@ -183,12 +189,15 @@ const BUFFER_ROUNDS = 10;
 
             if (!trimmed) {
                 if (__DEV__) console.debug(PREFIX, "no trimming needed");
-                localStorage.removeItem(TRIMMED_KEY);
+                document.documentElement.removeAttribute(TRIMMED_ATTR);
                 return response;
             }
 
-            // Signal to the content script that messages were removed
-            localStorage.setItem(TRIMMED_KEY, "true");
+            // Signal to the content script that messages were removed.
+            // Uses a DOM attribute on <html> because it's shared instantly
+            // between MAIN and ISOLATED worlds (localStorage is not reliable
+            // for MAIN→ISOLATED communication).
+            document.documentElement.setAttribute(TRIMMED_ATTR, "true");
 
             if (__DEV__) console.debug(PREFIX, "response trimmed successfully");
             return buildResponse(response, JSON.stringify(trimmed));

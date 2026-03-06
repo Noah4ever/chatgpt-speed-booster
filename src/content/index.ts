@@ -196,11 +196,10 @@ function refreshUI(): void {
         rafPending = false;
         const status = messageManager.getStatus();
 
-        // Check if the fetch interceptor trimmed messages from the API response
-        let fetchWasTrimmed = false;
-        try {
-            fetchWasTrimmed = localStorage.getItem("acsb_fetch_was_trimmed") === "true";
-        } catch { /* storage unavailable */ }
+        // Check if the fetch interceptor trimmed messages from the API response.
+        // Uses a DOM attribute on <html> set by the MAIN-world fetch interceptor,
+        // because DOM is shared between MAIN and ISOLATED worlds (localStorage is not).
+        const fetchWasTrimmed = document.documentElement.hasAttribute("data-acsb-trimmed");
 
         if (status.hiddenMessages > 0 && config.enabled) {
             // Normal Load More mode — there are still hidden DOM elements
