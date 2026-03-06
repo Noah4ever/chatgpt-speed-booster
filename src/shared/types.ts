@@ -10,6 +10,8 @@ export interface ExtensionConfig {
     readonly showStatus: boolean;
     // Corner placement for the floating status badge.
     readonly statusPosition: StatusPosition;
+    // When true, intercept fetch responses to trim messages before rendering.
+    readonly fetchInterceptEnabled: boolean;
 }
 
 export interface TrackedMessage {
@@ -26,6 +28,7 @@ export enum MessageType {
     STATUS_RESPONSE = "STATUS_RESPONSE",
     TOGGLE_ENABLED = "TOGGLE_ENABLED",
     TOGGLE_STATUS = "TOGGLE_STATUS",
+    TOGGLE_FETCH_INTERCEPT = "TOGGLE_FETCH_INTERCEPT",
 }
 
 export interface ExtensionMessage {

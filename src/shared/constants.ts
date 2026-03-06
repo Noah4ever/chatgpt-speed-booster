@@ -8,7 +8,11 @@ export const DEFAULT_CONFIG: Readonly<ExtensionConfig> = Object.freeze({
     enabled: true,
     showStatus: true,
     statusPosition: "top-right",
+    fetchInterceptEnabled: true,
 });
+
+/** localStorage key used by settings bridge → MAIN-world fetch interceptor. */
+export const LOCALSTORAGE_BRIDGE_KEY = "acsb_bridge_config" as const;
 
 export const CONFIG_LIMITS = Object.freeze({
     visibleMessageLimit: { min: 1, max: 200 },

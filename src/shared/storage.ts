@@ -25,6 +25,7 @@ function sanitiseConfig(raw: Partial<ExtensionConfig> | undefined): ExtensionCon
         statusPosition: ["top-left", "top-right", "bottom-left", "bottom-right"].includes(base.statusPosition)
             ? base.statusPosition
             : DEFAULT_CONFIG.statusPosition,
+        fetchInterceptEnabled: typeof base.fetchInterceptEnabled === "boolean" ? base.fetchInterceptEnabled : DEFAULT_CONFIG.fetchInterceptEnabled,
     };
 }
 
