@@ -32,6 +32,7 @@ export class LoadMoreButton {
     private container: HTMLElement | null = null;
     private readonly onLoadMore: LoadMoreHandler;
     private hiddenCount = 0;
+    private loadMoreBatchSize = 3;
     private siteConfig: SiteConfig;
     private fullLoadMode = false;
     private onFullLoad: (() => void) | null = null;
@@ -45,8 +46,10 @@ export class LoadMoreButton {
         anchorParent: HTMLElement,
         firstVisibleElement: HTMLElement | null,
         hiddenCount: number,
+        loadMoreBatchSize: number,
     ): void {
         this.hiddenCount = hiddenCount;
+        this.loadMoreBatchSize = loadMoreBatchSize;
 
         if (!this.container) {
             this.container = this.createElement();
@@ -193,7 +196,9 @@ export class LoadMoreButton {
             `.${CSS_PREFIX}-load-more-label`,
         );
         if (label) {
-            label.textContent = `Load more (${Math.floor(this.hiddenCount / 2)} hidden)`;
+            const hidden = Math.floor(this.hiddenCount / 2);
+            const perClick = Math.min(this.loadMoreBatchSize, hidden);
+            label.textContent = `Load ${perClick} more (${hidden} hidden)`;
         }
     }
 

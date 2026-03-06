@@ -220,9 +220,9 @@ function refreshUI(): void {
             const firstVisible = findFirstVisibleMessage();
             const container = findMessageContainer();
             if (container && firstVisible) {
-                loadMoreButton.show(container, firstVisible, status.hiddenMessages);
+                loadMoreButton.show(container, firstVisible, status.hiddenMessages, config.loadMoreBatchSize);
             } else if (container) {
-                loadMoreButton.show(container, null, status.hiddenMessages);
+                loadMoreButton.show(container, null, status.hiddenMessages, config.loadMoreBatchSize);
             }
         } else if (currentConversationTrimmed && config.enabled && config.fetchInterceptEnabled) {
             // All DOM messages visible, but fetch interceptor trimmed more.
