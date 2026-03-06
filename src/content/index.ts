@@ -172,32 +172,38 @@ function handleLoadMore(): void {
 /**
  * Central renderer for load-more and status-indicator visibility states.
  */
+let rafPending = false;
 function refreshUI(): void {
-    const status = messageManager.getStatus();
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(() => {
+        rafPending = false;
+        const status = messageManager.getStatus();
 
-    if (status.hiddenMessages > 0 && config.enabled) {
-        const firstVisible = findFirstVisibleMessage();
-        const container = findMessageContainer();
-        if (container && firstVisible) {
-            loadMoreButton.show(container, firstVisible, status.hiddenMessages);
-        } else if (container) {
-            loadMoreButton.show(container, null, status.hiddenMessages);
+        if (status.hiddenMessages > 0 && config.enabled) {
+            const firstVisible = findFirstVisibleMessage();
+            const container = findMessageContainer();
+            if (container && firstVisible) {
+                loadMoreButton.show(container, firstVisible, status.hiddenMessages);
+            } else if (container) {
+                loadMoreButton.show(container, null, status.hiddenMessages);
+            }
+        } else {
+            loadMoreButton.hide();
         }
-    } else {
-        loadMoreButton.hide();
-    }
 
-    if (!config.enabled || !config.showStatus || status.totalMessages === 0) {
-        statusIndicator.hide();
-    } else {
-        statusIndicator.update(status.hiddenMessages, status.totalMessages, config.statusPosition);
-    }
+        if (!config.enabled || !config.showStatus || status.totalMessages === 0) {
+            statusIndicator.hide();
+        } else {
+            statusIndicator.update(status.hiddenMessages, status.totalMessages, config.statusPosition);
+        }
+    });
 }
 
 function findFirstVisibleMessage(): HTMLElement | null {
     const all = document.querySelectorAll<HTMLElement>(currentSite.selectors.messageTurn);
     for (const el of all) {
-        if (el.style.display !== "none") return el;
+        if (!el.classList.contains("acsb-hidden")) return el;
     }
     return null;
 }

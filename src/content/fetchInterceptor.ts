@@ -72,12 +72,12 @@ const PREFIX = "[ACSB Fetch]";
  * The fetch interceptor keeps  visibleMessageLimit + (loadMoreBatchSize * BUFFER_ROUNDS)
  * messages so the content script still has hidden DOM elements to reveal.
  *
- * 100 rounds × default batch-size 3 = 300 turns (~600 API messages).
- * This means conversations with up to ~300 turns are never trimmed at
- * the fetch level, preserving full "Load More" support while still
- * protecting against truly massive chats (1 000+ turns).
+ * 5 rounds × default batch-size 3 × 2 (×2 turn convention) = 36 API msgs
+ * = 18 turns kept.  This aggressively trims large chats so the framework
+ * never creates DOM for the discarded turns — the primary speed gain.
+ * Users who want the full history can disable Fast mode.
  */
-const BUFFER_ROUNDS = 100;
+const BUFFER_ROUNDS = 5;
 
 // ---------------------------------------------------------------------------
 // Bootstrap

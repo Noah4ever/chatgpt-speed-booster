@@ -6,14 +6,28 @@ import type {
 import { DEFAULT_CONFIG, DATA_ATTR } from "../shared/constants";
 import { logger } from "../shared/logger";
 
+/** Injected once into <head> — all hiding is done via this class. */
+const HIDE_CLASS = "acsb-hidden";
+let styleInjected = false;
+function injectHideStyle(): void {
+    if (styleInjected) return;
+    styleInjected = true;
+    const style = document.createElement("style");
+    style.textContent = `.${HIDE_CLASS}{display:none!important}`;
+    (document.head ?? document.documentElement).appendChild(style);
+}
+
 export class MessageManager {
     private messages: TrackedMessage[] = [];
     private config: ExtensionConfig = { ...DEFAULT_CONFIG };
     private messageIdAttribute = "data-testid";
-    private cachedVisibleCount: number = 0; // Store the count of currently visible messages before loading more messages
+    private cachedVisibleCount: number = 0;
+    /** O(1) element → TrackedMessage lookup (avoids .find() scans). */
+    private elementMap = new Map<HTMLElement, TrackedMessage>();
+    private visibleCounter = 0;
 
     private get visibleCount(): number {
-        return this.messages.filter((m) => m.visible).length;
+        return this.visibleCounter;
     }
 
     setMessageIdAttribute(attr: string): void {
@@ -26,7 +40,10 @@ export class MessageManager {
     }
 
     initialise(elements: HTMLElement[]): void {
+        injectHideStyle();
         this.messages = [];
+        this.elementMap.clear();
+        this.visibleCounter = 0;
         for (const el of elements) this.trackElement(el);
         this.recalculateVisibility();
         logger.debug(`initialised with ${this.messages.length} messages`);
@@ -34,7 +51,7 @@ export class MessageManager {
 
     addMessages(elements: HTMLElement[]): void {
         for (const el of elements) {
-            if (this.findByElement(el)) continue;
+            if (this.elementMap.has(el)) continue;
             this.trackElement(el);
         }
         this.recalculateVisibility();
@@ -42,7 +59,14 @@ export class MessageManager {
 
     removeMessages(elements: HTMLElement[]): void {
         const removed = new Set(elements);
-        this.messages = this.messages.filter((m) => !removed.has(m.element));
+        this.messages = this.messages.filter((m) => {
+            if (removed.has(m.element)) {
+                this.elementMap.delete(m.element);
+                if (m.visible) this.visibleCounter--;
+                return false;
+            }
+            return true;
+        });
     }
 
     loadMore(): number {
@@ -56,7 +80,7 @@ export class MessageManager {
     }
 
     hasHiddenMessages(): boolean {
-        return this.messages.some((m) => !m.visible);
+        return this.visibleCounter < this.messages.length;
     }
 
     getStatus(): ExtensionStatus {
@@ -78,13 +102,18 @@ export class MessageManager {
             msg.element.removeAttribute(DATA_ATTR);
         }
         this.messages = [];
-        this.cachedVisibleCount = 0; // Reset the cached "load more" visible-count.
+        this.elementMap.clear();
+        this.visibleCounter = 0;
+        this.cachedVisibleCount = 0;
         logger.debug("MessageManager destroyed");
     }
 
     private trackElement(el: HTMLElement): void {
         const id = this.deriveId(el);
-        this.messages.push({ id, element: el, visible: true });
+        const msg: TrackedMessage = { id, element: el, visible: true };
+        this.messages.push(msg);
+        this.elementMap.set(el, msg);
+        this.visibleCounter++;
         el.setAttribute(DATA_ATTR, id);
     }
 
@@ -94,7 +123,7 @@ export class MessageManager {
             return;
         }
         // If "load more" is ever clicked, cachedVisibleCount will store the new limit for the current session and will be used
-        const limit = Math.max(this.cachedVisibleCount, this.config.visibleMessageLimit * 2); 
+        const limit = Math.max(this.cachedVisibleCount, this.config.visibleMessageLimit * 2);
         const total = this.messages.length;
 
         for (let i = 0; i < total; i++) {
@@ -108,19 +137,19 @@ export class MessageManager {
     }
 
     private hideMessage(msg: TrackedMessage): void {
+        if (!msg.visible) return; // already hidden — skip DOM write
         msg.visible = false;
-        msg.element.style.display = "none";
+        this.visibleCounter--;
+        msg.element.classList.add(HIDE_CLASS);
         msg.element.setAttribute("aria-hidden", "true");
     }
 
     private showMessage(msg: TrackedMessage): void {
+        if (msg.visible) return; // already visible — skip DOM write
         msg.visible = true;
-        msg.element.style.display = "";
+        this.visibleCounter++;
+        msg.element.classList.remove(HIDE_CLASS);
         msg.element.removeAttribute("aria-hidden");
-    }
-
-    private findByElement(el: HTMLElement): TrackedMessage | undefined {
-        return this.messages.find((m) => m.element === el);
     }
 
     private deriveId(el: HTMLElement): string {

@@ -22,4 +22,4 @@ export const CONFIG_LIMITS = Object.freeze({
 export const EXTENSION_NAME = "AI Chat Speed Booster" as const;
 export const CSS_PREFIX = "acsb" as const;
 export const DATA_ATTR = "data-acsb-managed" as const;
-export const MUTATION_DEBOUNCE_MS = 150 as const;
+export const MUTATION_DEBOUNCE_MS = 80 as const;
