@@ -221,14 +221,16 @@ export class StatusIndicator {
     /**
      * Updates the displayed counts and position. Creates the indicator if needed.
      */
-    update(hidden: number, total: number, position: StatusPosition): void {
+    update(hidden: number, total: number, position: StatusPosition, fetchInterceptEnabled = false): void {
         if (!this.container) this.mount();
         if (this.position !== position) {
             this.position = position;
             this.applyPosition();
         }
         if (this.label) {
-            this.label.textContent = `${Math.floor(hidden / 2)} hidden · ${Math.floor(total / 2)} total`;
+            this.label.textContent = fetchInterceptEnabled
+                ? `${Math.floor(hidden / 2)} hidden`
+                : `${Math.floor(hidden / 2)} hidden · ${Math.floor(total / 2)} total`;
         }
     }
 

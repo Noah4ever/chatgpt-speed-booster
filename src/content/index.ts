@@ -239,7 +239,7 @@ function refreshUI(): void {
         if (!config.enabled || !config.showStatus || status.totalMessages === 0) {
             statusIndicator.hide();
         } else {
-            statusIndicator.update(status.hiddenMessages, status.totalMessages, config.statusPosition);
+            statusIndicator.update(status.hiddenMessages, status.totalMessages, config.statusPosition, config.fetchInterceptEnabled);
         }
     });
 }
