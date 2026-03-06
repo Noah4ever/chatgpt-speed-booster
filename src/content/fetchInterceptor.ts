@@ -189,7 +189,11 @@ const BUFFER_ROUNDS = 10;
 
             if (!trimmed) {
                 if (__DEV__) console.debug(PREFIX, "no trimming needed");
-                document.documentElement.removeAttribute(TRIMMED_ATTR);
+                // Do NOT remove TRIMMED_ATTR here.  Multiple GET requests
+                // can match the URL pattern (sub-endpoints, re-fetches, etc.).
+                // If a previous request set the flag, a later non-conversation
+                // response must not erase it.  The content script consumes
+                // and resets the flag on conversation change instead.
                 return response;
             }
 

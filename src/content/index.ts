@@ -19,6 +19,13 @@ let statusIndicator: StatusIndicator;
 let domObserver: DOMObserver;
 let conversationRetryTimer: ReturnType<typeof setTimeout> | null = null;
 let previousMessageElements: Set<HTMLElement> = new Set();
+/**
+ * Internal flag tracking whether the fetch interceptor trimmed the current
+ * conversation's API response.  Set by consuming the DOM attribute
+ * (data-acsb-trimmed) written by the MAIN-world interceptor, and reset
+ * on conversation change so it doesn't carry over across SPA navigations.
+ */
+let currentConversationTrimmed = false;
 
 async function bootstrap(): Promise<void> {
     const site = detectCurrentSite();
@@ -105,6 +112,10 @@ function handleMessagesRemoved(elements: HTMLElement[]): void {
  */
 function handleConversationChanged(): void {
     logger.debug("conversation changed, re-initialising");
+
+    // Reset the trimmed flag for the new conversation.  The fetch
+    // interceptor will set the DOM attribute again if it trims.
+    currentConversationTrimmed = false;
 
     // Cancel any in-flight retry loop from a previous navigation
     if (conversationRetryTimer) {
@@ -196,10 +207,13 @@ function refreshUI(): void {
         rafPending = false;
         const status = messageManager.getStatus();
 
-        // Check if the fetch interceptor trimmed messages from the API response.
-        // Uses a DOM attribute on <html> set by the MAIN-world fetch interceptor,
-        // because DOM is shared between MAIN and ISOLATED worlds (localStorage is not).
-        const fetchWasTrimmed = document.documentElement.hasAttribute("data-acsb-trimmed");
+        // Consume the DOM attribute written by the MAIN-world fetch
+        // interceptor.  Once consumed we store the flag internally so
+        // subsequent non-conversation fetch responses can't erase it.
+        if (document.documentElement.hasAttribute("data-acsb-trimmed")) {
+            currentConversationTrimmed = true;
+            document.documentElement.removeAttribute("data-acsb-trimmed");
+        }
 
         if (status.hiddenMessages > 0 && config.enabled) {
             // Normal Load More mode — there are still hidden DOM elements
@@ -210,7 +224,7 @@ function refreshUI(): void {
             } else if (container) {
                 loadMoreButton.show(container, null, status.hiddenMessages);
             }
-        } else if (fetchWasTrimmed && config.enabled && config.fetchInterceptEnabled) {
+        } else if (currentConversationTrimmed && config.enabled && config.fetchInterceptEnabled) {
             // All DOM messages visible, but fetch interceptor trimmed more.
             // Show "Load full conversation" button.
             const firstVisible = findFirstVisibleMessage();
