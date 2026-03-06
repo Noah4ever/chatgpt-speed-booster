@@ -19,6 +19,28 @@
         },
         "ui": {
             "loadMoreMargin": "4px 15px 4px 0px"
+        },
+        "fetchIntercept": {
+            "urlMatch": "/backend-api/conversation/",
+            "urlExclude": [
+                "/backend-api/conversations"
+            ],
+            "method": "GET",
+            "strategy": "tree-walk",
+            "treeWalk": {
+                "nodesKey": "mapping",
+                "currentNodeKey": "current_node",
+                "rootKey": "root",
+                "parentPointer": "parent",
+                "childrenKey": "children",
+                "messageKey": "message",
+                "roleAccessor": "author.role",
+                "visibleRoles": [
+                    "user",
+                    "assistant",
+                    "tool"
+                ]
+            }
         }
     },
     {
@@ -41,6 +63,23 @@
         },
         "ui": {
             "loadMoreMargin": "4px 0"
+        },
+        "fetchIntercept": {
+            "urlMatch": "/chat_conversations/",
+            "urlExclude": [
+                "/chat_conversations?"
+            ],
+            "method": "GET",
+            "strategy": "array-slice",
+            "arraySlice": {
+                "messagesKey": "chat_messages",
+                "roleKey": "sender",
+                "visibleRoles": [
+                    "human",
+                    "assistant"
+                ],
+                "keepInitial": 1
+            }
         }
     }
 ]

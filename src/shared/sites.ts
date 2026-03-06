@@ -16,6 +16,38 @@ export interface SiteUI {
     readonly loadMoreMargin?: string;
 }
 
+export interface FetchInterceptTreeWalkConfig {
+    readonly nodesKey: string;
+    readonly currentNodeKey: string;
+    readonly rootKey: string;
+    readonly parentPointer: string;
+    readonly childrenKey: string;
+    readonly messageKey: string;
+    readonly roleAccessor: string;
+    readonly visibleRoles: readonly string[];
+}
+
+export interface FetchInterceptArraySliceConfig {
+    readonly messagesKey: string;
+    readonly roleKey: string;
+    readonly visibleRoles: readonly string[];
+    /** Number of initial messages to always keep (system prompts, etc.). */
+    readonly keepInitial?: number;
+}
+
+export interface FetchInterceptConfig {
+    /** Substring that must appear in the URL to match. */
+    readonly urlMatch: string;
+    /** URL substrings that exclude a request from interception. */
+    readonly urlExclude: readonly string[];
+    /** HTTP method to match (e.g. "GET"). */
+    readonly method: string;
+    /** Trimming strategy to apply. */
+    readonly strategy: "tree-walk" | "array-slice";
+    readonly treeWalk?: FetchInterceptTreeWalkConfig;
+    readonly arraySlice?: FetchInterceptArraySliceConfig;
+}
+
 export interface SiteConfig {
     readonly id: string;
     readonly name: string;
@@ -25,6 +57,7 @@ export interface SiteConfig {
     readonly messageIdAttribute?: string;
     readonly statusAnchors?: StatusAnchors;
     readonly ui?: SiteUI;
+    readonly fetchIntercept?: FetchInterceptConfig;
 }
 
 export const SITES: readonly SiteConfig[] = sitesConfig as SiteConfig[];
