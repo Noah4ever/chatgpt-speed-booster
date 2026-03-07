@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "AI Chat Speed Booster",
-    "version": "1.3.0",
+    "version": "1.3.4",
     "description": "Speeds up AI chats by showing recent messages first and letting you load older ones on demand.",
     "permissions": [
         "storage",

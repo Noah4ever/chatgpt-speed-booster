@@ -2,6 +2,8 @@ export type TargetBrowser = "chrome" | "firefox" | "edge" | "safari";
 
 export type StatusPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
+export type Theme = "light" | "dark";
+
 export interface ExtensionConfig {
     readonly visibleMessageLimit: number;
     readonly loadMoreBatchSize: number;
@@ -12,6 +14,8 @@ export interface ExtensionConfig {
     readonly statusPosition: StatusPosition;
     // When true, intercept fetch responses to trim messages before rendering.
     readonly fetchInterceptEnabled: boolean;
+    // UI theme preference.
+    readonly theme: Theme;
 }
 
 export interface TrackedMessage {

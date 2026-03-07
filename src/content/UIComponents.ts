@@ -217,6 +217,7 @@ export class StatusIndicator {
     private container: HTMLElement | null = null;
     private label: HTMLElement | null = null;
     private position: StatusPosition = "top-right";
+    private appliedLightTheme: boolean | null = null;
     private siteConfig: SiteConfig;
 
     constructor(siteConfig: SiteConfig) {
@@ -224,9 +225,9 @@ export class StatusIndicator {
     }
 
     /**
-     * Updates the displayed counts and position. Creates the indicator if needed.
+     * Updates the displayed counts, position and theme. Creates the indicator if needed.
      */
-    update(hidden: number, total: number, position: StatusPosition, fetchInterceptEnabled = false): void {
+    update(hidden: number, total: number, position: StatusPosition, fetchInterceptEnabled = false, lightTheme: boolean = false): void {
         if (!this.container) this.mount();
         if (this.position !== position) {
             this.position = position;
@@ -237,16 +238,45 @@ export class StatusIndicator {
                 ? `${Math.floor(hidden / 2)} hidden`
                 : `${Math.floor(hidden / 2)} hidden · ${Math.floor(total / 2)} total`;
         }
+        // Avoid rewriting inline theme styles on every refresh frame.
+        if (this.appliedLightTheme !== lightTheme) {
+            if (lightTheme) {
+                this.setLightTheme();
+            } else {
+                this.setDarkTheme();
+            }
+            this.appliedLightTheme = lightTheme;
+        }
     }
 
     hide(): void {
         this.container?.remove();
         this.container = null;
         this.label = null;
+        this.appliedLightTheme = null;
     }
 
     destroy(): void {
         this.hide();
+    }
+
+    /*** Sets the light theme for the status indicator. */
+    private setLightTheme(): void {
+        if (this.container){
+            this.container.style.background = "var(--surface-secondary, rgba(255, 255, 255, 0.7))";
+            this.container.style.color = "#000000";
+        }
+        if (this.label) this.label.style.color = "#000000";
+    }
+
+    /** Sets the dark theme for the status indicator. */
+    private setDarkTheme(): void {
+        if (this.container) {
+            this.container.style.background = "var(--surface-secondary, rgba(0,0,0,0.7))";
+            this.container.style.color = "var(--text-secondary, #9ca3af)";
+        }
+        if (this.label) this.label.style.color = "var(--text-secondary, #9ca3af)";
+        
     }
 
     private getAnchorRect(anchor: "name" | "controls" | "bottom"): DOMRect | undefined {

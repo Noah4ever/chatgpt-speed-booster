@@ -9,6 +9,7 @@ export const DEFAULT_CONFIG: Readonly<ExtensionConfig> = Object.freeze({
     showStatus: true,
     statusPosition: "top-right",
     fetchInterceptEnabled: true,
+    theme: "dark",
 });
 
 /** localStorage key used by settings bridge → MAIN-world fetch interceptor. */

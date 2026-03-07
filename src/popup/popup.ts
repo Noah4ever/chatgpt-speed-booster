@@ -1,6 +1,6 @@
 import { sendMessage } from "../shared/browser-api";
 import { CONFIG_LIMITS, DEFAULT_CONFIG } from "../shared/constants";
-import { MessageType, type ExtensionConfig, type ExtensionStatus, type StatusPosition } from "../shared/types";
+import { MessageType, Theme, type ExtensionConfig, type ExtensionStatus, type StatusPosition } from "../shared/types";
 
 const toggleEnabled = document.getElementById("toggle-enabled") as HTMLInputElement;
 const toggleStatus = document.getElementById("toggle-status") as HTMLInputElement;
@@ -11,8 +11,24 @@ const statusText = document.getElementById("status-text") as HTMLElement;
 const settingsSection = document.querySelector(".popup-settings") as HTMLElement;
 const positionPicker = document.getElementById("position-picker") as HTMLElement;
 const positionButtons = positionPicker.querySelectorAll<HTMLButtonElement>(".position-picker__btn");
+const lightIcon = document.querySelector(".theme-toggle__icon.lucide-sun") as HTMLElement;
+const darkIcon = document.querySelector(".theme-toggle__icon.lucide-moon") as HTMLElement;
+const themeToggle = document.getElementById("theme-toggle") as HTMLButtonElement;
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** Apply the selected theme to the popup UI. */
+function applyTheme(theme: Theme): void {
+    document.documentElement.setAttribute("data-theme", theme);
+    themeToggle.setAttribute("aria-pressed", String(theme === "light"));
+    if (theme === "light") {
+        lightIcon.classList.add("hidden");
+        darkIcon.classList.remove("hidden");
+    } else {
+        lightIcon.classList.remove("hidden");
+        darkIcon.classList.add("hidden");
+    }
+}
 
 /** Attempt to send a message to the background script; return null on failure. */
 async function safeSendMessage<T>(message: unknown): Promise<T | null> {
@@ -25,7 +41,9 @@ async function safeSendMessage<T>(message: unknown): Promise<T | null> {
 
 async function init(): Promise<void> {
     const config = await safeSendMessage<ExtensionConfig>({ type: MessageType.GET_CONFIG });
-    renderConfig(config ?? DEFAULT_CONFIG);
+    const finalConfig = config ?? DEFAULT_CONFIG; // Fallback to defaults if background script is unreachable
+    applyTheme(finalConfig.theme);
+    renderConfig(finalConfig);
     await refreshStatus();
 }
 
@@ -122,6 +140,21 @@ positionPicker.addEventListener("click", async (e) => {
     });
     if (config) renderConfig(config);
     await refreshStatus();
+});
+
+
+/** Theme toggle button listener */
+themeToggle.addEventListener("click", async () => {
+    const currentTheme = document.documentElement.getAttribute("data-theme") as "light" | "dark" || "dark";
+    const newTheme = currentTheme === "dark" ? "light" : "dark";
+    const config = await safeSendMessage<ExtensionConfig>({
+        type: MessageType.SET_CONFIG,
+        payload: { theme: newTheme },
+    });
+    if (config) {
+        applyTheme(config.theme);
+        renderConfig(config);
+    }
 });
 
 init();

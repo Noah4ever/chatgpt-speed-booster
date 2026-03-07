@@ -7,6 +7,15 @@
 }
 
 :root {
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --transition: 0.15s ease;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* Dark mode (default) */
+:root,
+[data-theme="dark"] {
     --bg-primary: #1a1a2e;
     --bg-secondary: #222240;
     --bg-tertiary: #2e2e52;
@@ -17,25 +26,20 @@
     --accent-hover: #0d8a6a;
     --border: rgba(255, 255, 255, 0.08);
     --border-focus: rgba(16, 163, 127, 0.5);
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --transition: 0.15s ease;
-    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-@media (prefers-color-scheme: light) {
-    :root {
-        --bg-primary: #ffffff;
-        --bg-secondary: #f5f5fa;
-        --bg-tertiary: #e8e8f0;
-        --text-primary: #1a1a2e;
-        --text-secondary: #555570;
-        --text-muted: #7878a0;
-        --accent: #10a37f;
-        --accent-hover: #0d8a6a;
-        --border: rgba(0, 0, 0, 0.08);
-        --border-focus: rgba(16, 163, 127, 0.4);
-    }
+/* Light mode */
+[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5fa;
+    --bg-tertiary: #e8e8f0;
+    --text-primary: #1a1a2e;
+    --text-secondary: #555570;
+    --text-muted: #7878a0;
+    --accent: #10a37f;
+    --accent-hover: #0d8a6a;
+    --border: rgba(0, 0, 0, 0.08);
+    --border-focus: rgba(16, 163, 127, 0.4);
 }
 
 body {
@@ -194,6 +198,38 @@ body {
 .popup-settings[aria-disabled="true"] {
     opacity: 0.4;
     pointer-events: none;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+    all: unset;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 4px;
+    margin-left: 4px;
+    border-radius: 6px;
+    transition: background var(--transition);
+}
+
+.theme-toggle:hover {
+    background: var(--bg-tertiary);
+}
+
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+}
+
+.theme-toggle__icon {
+    display: block;
+    color: var(--text-secondary);
+    transition: opacity var(--transition), transform var(--transition);
+}
+
+.theme-toggle__icon.hidden {
+    display: none;
 }
 
 /* Position picker grid */
