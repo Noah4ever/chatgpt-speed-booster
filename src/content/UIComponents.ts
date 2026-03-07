@@ -217,6 +217,7 @@ export class StatusIndicator {
     private container: HTMLElement | null = null;
     private label: HTMLElement | null = null;
     private position: StatusPosition = "top-right";
+    private appliedLightTheme: boolean | null = null;
     private siteConfig: SiteConfig;
 
     constructor(siteConfig: SiteConfig) {
@@ -237,10 +238,14 @@ export class StatusIndicator {
                 ? `${Math.floor(hidden / 2)} hidden`
                 : `${Math.floor(hidden / 2)} hidden · ${Math.floor(total / 2)} total`;
         }
-        if (lightTheme) {
-            this.setLightTheme();
-        } else {
-            this.setDarkTheme();
+        // Avoid rewriting inline theme styles on every refresh frame.
+        if (this.appliedLightTheme !== lightTheme) {
+            if (lightTheme) {
+                this.setLightTheme();
+            } else {
+                this.setDarkTheme();
+            }
+            this.appliedLightTheme = lightTheme;
         }
     }
 
@@ -248,6 +253,7 @@ export class StatusIndicator {
         this.container?.remove();
         this.container = null;
         this.label = null;
+        this.appliedLightTheme = null;
     }
 
     destroy(): void {

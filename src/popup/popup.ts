@@ -1,6 +1,6 @@
 import { sendMessage } from "../shared/browser-api";
 import { CONFIG_LIMITS, DEFAULT_CONFIG } from "../shared/constants";
-import { MessageType, type ExtensionConfig, type ExtensionStatus, type StatusPosition } from "../shared/types";
+import { MessageType, Theme, type ExtensionConfig, type ExtensionStatus, type StatusPosition } from "../shared/types";
 
 const toggleEnabled = document.getElementById("toggle-enabled") as HTMLInputElement;
 const toggleStatus = document.getElementById("toggle-status") as HTMLInputElement;
@@ -18,7 +18,7 @@ const themeToggle = document.getElementById("theme-toggle") as HTMLElement;
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
 /** Apply the selected theme to the popup UI. */
-function applyTheme(theme: "light" | "dark"): void {
+function applyTheme(theme: Theme): void {
     document.documentElement.setAttribute("data-theme", theme);
     if (theme === "light") {
         lightIcon.classList.add("hidden");
