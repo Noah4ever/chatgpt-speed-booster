@@ -4,14 +4,16 @@ Keeps long AI chat conversations responsive by showing only recent messages firs
 
 Works on **ChatGPT**, **Claude**, and any AI chat app you add to the config.
 
+## Install via official browser extension store
+
 | Browser | Version | Link |
 | --- | --- | --- |
 | Chrome | v1.0.0 | [chromewebstore](https://chromewebstore.google.com/detail/ai-chat-speed-booster/fgefgkfmapdjjjdekejanelknedclfik) | 
 | Firefox | v1.3.4 | [addons.mozilla.org](https://addons.mozilla.org/en-US/firefox/addon/ai-chat-speed-booster/?utm_source=addons.mozilla.org&utm_medium=referral&utm_content=search)
 
-## Install (quick)
+## Install
 
-If you just want to install it:
+We suggest you use the the official browser extension store for your browser because it will get automatically updated. If you the extension is not in your browser extension store either open an issue to let us know or download the extension and import it yourself. Keep in mind when a new version releases it does not update automatically.  
 
 1. Go to [Releases](https://github.com/Noah4ever/ai-chat-speed-booster/releases)
 2. Download the zip for your browser
