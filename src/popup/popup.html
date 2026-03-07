@@ -18,8 +18,7 @@
                             stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
                     <span>Speed Booster</span>
-                    <!-- Theme toggle button -->
-                    <div class = "theme-toggle" id="theme-toggle" aria-label="Toggle light/dark theme">
+                    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle theme" aria-pressed="false">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="18"
@@ -31,7 +30,6 @@
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             class="theme-toggle__icon lucide lucide-sun"
-                            title="Switch to light mode"
                         >
                             <circle cx="12" cy="12" r="4" />
                             <path d="M12 2v2" />
@@ -55,13 +53,12 @@
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             class="theme-toggle__icon lucide lucide-moon"
-                            title="Switch to dark mode"
                         >
                             <path
                                 d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"
                             />
                         </svg>
-                    </div>  
+                    </button>  
                 </div>
                 <label class="toggle" aria-label="Enable or disable extension">
                     <input type="checkbox" id="toggle-enabled" class="toggle__input">

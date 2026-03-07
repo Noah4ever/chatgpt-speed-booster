@@ -13,13 +13,14 @@ const positionPicker = document.getElementById("position-picker") as HTMLElement
 const positionButtons = positionPicker.querySelectorAll<HTMLButtonElement>(".position-picker__btn");
 const lightIcon = document.querySelector(".theme-toggle__icon.lucide-sun") as HTMLElement;
 const darkIcon = document.querySelector(".theme-toggle__icon.lucide-moon") as HTMLElement;
-const themeToggle = document.getElementById("theme-toggle") as HTMLElement;
+const themeToggle = document.getElementById("theme-toggle") as HTMLButtonElement;
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
 /** Apply the selected theme to the popup UI. */
 function applyTheme(theme: Theme): void {
     document.documentElement.setAttribute("data-theme", theme);
+    themeToggle.setAttribute("aria-pressed", String(theme === "light"));
     if (theme === "light") {
         lightIcon.classList.add("hidden");
         darkIcon.classList.remove("hidden");
