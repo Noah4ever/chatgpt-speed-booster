@@ -51,6 +51,7 @@ async function bootstrap(): Promise<void> {
         onMessagesAdded: handleMessagesAdded,
         onMessagesRemoved: handleMessagesRemoved,
         onConversationChanged: handleConversationChanged,
+        onMessagesReset: handleMessagesReset,
         getLastTrackedMessageId: () => messageManager.getLastTrackedMessageId(),
         hasTrackedMessageId: (id: string) =>
             messageManager.hasTrackedMessageId(id),
@@ -68,7 +69,8 @@ async function bootstrap(): Promise<void> {
         console.log(
             `[AI Chat Speed Booster] Site: ${currentSite.name} | ` +
             `Selector: "${currentSite.selectors.messageTurn}" → ${msgs.length} match(es) | ` +
-            `Scroll container: ${scrollEl ? "found" : "NOT found"}`,
+            `Scroll container: ${scrollEl ? "found" : "NOT found"}` +
+            `| Is Dynamic: ${currentSite.isDynamic ? "Yes" : "No"}`,
         );
     }, 3000);
 }
@@ -162,6 +164,28 @@ function handleConfigUpdated(newConfig: ExtensionConfig): void {
     messageManager.updateConfig(config);
     refreshUI();
     logger.debug("config updated from external source");
+}
+
+/**
+ * Resets message manager and UI state when a large batch of messages is added at once, which is a strong signal
+ * that the conversation thread was re-rendered from scratch (e.g. due to a significant navigation or dynamic loading event)
+ * and incremental mutation handling can't keep up with the changes.
+ */
+function handleMessagesReset(): void {
+    if(!currentSite.isDynamic) return; // Only apply this heuristic for sites known to have dynamic loading (e.g. Gemini),
+    // to avoid unnecessary resets on more static sites where the existing mutation handling is sufficient
+    logger.debug("large batch detected, re-initialising message manager");
+    messageManager.destroy();
+    loadMoreButton.hide();
+    const messages = domObserver.queryAllMessages();
+    messageManager.initialise(messages);
+    refreshUI();
+    const scrollEl = domObserver.findScrollContainer();
+    if (scrollEl) {
+        scrollEl.scrollTo({ top: 0, behavior: "instant" });
+    } else {
+        window.scrollTo({ top: 0, behavior: "instant" });
+    }
 }
 
 function handleExtensionMessage(message: unknown): ExtensionStatus | undefined {

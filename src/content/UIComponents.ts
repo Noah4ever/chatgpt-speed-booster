@@ -124,6 +124,7 @@ export class LoadMoreButton {
         wrapper.setAttribute("role", "banner");
         Object.assign(wrapper.style, {
             display: "flex",
+            alignSelf: "stretch", // Make wrapper take full width of the parent container while respecting its own horizontal margins (Needed for Gemini)
             justifyContent: "center",
             alignItems: "center",
             padding: "12px 16px",

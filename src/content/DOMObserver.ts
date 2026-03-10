@@ -1,4 +1,4 @@
-import type { SiteSelectors } from "../shared/sites";
+import { type SiteSelectors } from "../shared/sites";
 import { MUTATION_DEBOUNCE_MS } from "../shared/constants";
 import { logger } from "../shared/logger";
 
@@ -6,6 +6,7 @@ export interface DOMObserverCallbacks {
     onMessagesAdded(elements: HTMLElement[]): void;
     onMessagesRemoved(elements: HTMLElement[]): void;
     onConversationChanged(): void;
+    onMessagesReset(): void;
     getLastTrackedMessageId(): string | null;
     hasTrackedMessageId(id: string): boolean;
 }
@@ -138,7 +139,11 @@ export class DOMObserver {
         // node contained 2+ message turns) caused duplicate change events
         // and race conditions during SPA navigations.
 
-        if (addedMessages.length > 0) {
+        if (addedMessages.length > 2) { // If a large batch of messages is added at once, it's likely a dynamic
+        // loading scenario (e.g. Gemini) where the existing message tracking can get out of sync, so we trigger a full reset to be safe
+            logger.debug(`Detected ${addedMessages.length} new messages, triggering full reset`);
+            this.callbacks.onMessagesReset();
+        } else if (addedMessages.length > 0) {
             logger.debug(`${addedMessages.length} message turn(s) added`);
             this.callbacks.onMessagesAdded(addedMessages);
         }

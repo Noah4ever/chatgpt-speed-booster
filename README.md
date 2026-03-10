@@ -2,7 +2,7 @@
 
 Keeps long AI chat conversations responsive by showing only recent messages first, then letting you load older ones when you need them.
 
-Works on **ChatGPT**, **Claude**, and any AI chat app you add to the config.
+Works on **ChatGPT**, **Claude**, **Gemini**, and any AI chat app you add to the config.
 
 ## Install via official browser extension store
 
@@ -92,6 +92,7 @@ Then rebuild. The build script auto-injects the URL patterns into all browser ma
 | ---- | ------ |
 | [ChatGPT](https://chatgpt.com) | ✅ Tested |
 | [Claude](https://claude.ai) | ✅ Tested |
+| [Gemini](https://gemini.google.com) | ✅ Tested |
 
 PRs to add or fix site configs are welcome.
 
