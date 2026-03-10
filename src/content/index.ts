@@ -47,7 +47,7 @@ async function bootstrap(): Promise<void> {
 
     if (!config.showStatus) statusIndicator.hide();
 
-    domObserver = new DOMObserver(currentSite.selectors, {
+    domObserver = new DOMObserver(currentSite, {
         onMessagesAdded: handleMessagesAdded,
         onMessagesRemoved: handleMessagesRemoved,
         onConversationChanged: handleConversationChanged,
@@ -69,8 +69,8 @@ async function bootstrap(): Promise<void> {
         console.log(
             `[AI Chat Speed Booster] Site: ${currentSite.name} | ` +
             `Selector: "${currentSite.selectors.messageTurn}" → ${msgs.length} match(es) | ` +
-            `Scroll container: ${scrollEl ? "found" : "NOT found"}` +
-            `| Is Dynamic: ${currentSite.isDynamic ? "Yes" : "No"}`,
+            `Scroll container: ${scrollEl ? "found" : "NOT found"} | ` +
+            `Is Dynamic: ${currentSite.isDynamic ? "Yes" : "No"}`,
         );
     }, 3000);
 }
@@ -172,8 +172,6 @@ function handleConfigUpdated(newConfig: ExtensionConfig): void {
  * and incremental mutation handling can't keep up with the changes.
  */
 function handleMessagesReset(): void {
-    if(!currentSite.isDynamic) return; // Only apply this heuristic for sites known to have dynamic loading (e.g. Gemini),
-    // to avoid unnecessary resets on more static sites where the existing mutation handling is sufficient
     logger.debug("large batch detected, re-initialising message manager");
     messageManager.destroy();
     loadMoreButton.hide();
@@ -182,9 +180,9 @@ function handleMessagesReset(): void {
     refreshUI();
     const scrollEl = domObserver.findScrollContainer();
     if (scrollEl) {
-        scrollEl.scrollTo({ top: 0, behavior: "instant" });
+        scrollEl.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-        window.scrollTo({ top: 0, behavior: "instant" });
+        window.scrollTo({ top: 0, behavior: "smooth" });
     }
 }
 
