@@ -86,17 +86,21 @@ function scheduleInitialScan(): void {
             refreshUI();
             logger.info(`initial scan: ${existing.length} messages`);
             // After hiding old messages, scroll the container to the bottom so
-            // the user always sees the most recent turn.  Required for sites
-            // whose scroll container (e.g. Gemini's infinite-scroller) does not
-            // support CSS scroll anchoring and would otherwise stay at the top.
-            requestAnimationFrame(() => {
-                const scrollEl = domObserver.findScrollContainer();
-                if (scrollEl) {
-                    scrollEl.scrollTop = scrollEl.scrollHeight;
-                } else {
-                    window.scrollTo(0, document.body.scrollHeight);
-                }
-            });
+            // the user always sees the most recent turn.  Only needed for sites
+            // that don't support CSS scroll anchoring (e.g. Gemini's custom
+            // infinite-scroller element).  ChatGPT and Claude manage their own
+            // scroll position and will fight a forced scroll, causing layout
+            // issues or even triggering a full re-render.
+            if (currentSite.isDynamic) {
+                requestAnimationFrame(() => {
+                    const scrollEl = domObserver.findScrollContainer();
+                    if (scrollEl) {
+                        scrollEl.scrollTop = scrollEl.scrollHeight;
+                    } else {
+                        window.scrollTo(0, document.body.scrollHeight);
+                    }
+                });
+            }
             return;
         }
         setTimeout(attempt, 500);
