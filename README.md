@@ -2,7 +2,7 @@
 
 Keeps long AI chat conversations responsive by showing only recent messages first, then letting you load older ones when you need them.
 
-Works on **ChatGPT**, **Claude**, and any AI chat app you add to the config.
+Works on **ChatGPT**, **Claude**, **Gemini**, and any AI chat app you add to the config.
 
 ## Install via official browser extension store
 
@@ -13,7 +13,7 @@ Works on **ChatGPT**, **Claude**, and any AI chat app you add to the config.
 
 ## Install
 
-We suggest you use the the official browser extension store for your browser because it will get automatically updated. If you the extension is not in your browser extension store either open an issue to let us know or download the extension and import it yourself. Keep in mind when a new version releases it does not update automatically.  
+We suggest using your browser's official extension store because it updates automatically. If the extension is not available in your browser's store, either open an issue to let us know or download the extension and import it manually. Keep in mind that manually installed versions do not update automatically when a new release is published.  
 
 1. Go to [Releases](https://github.com/Noah4ever/ai-chat-speed-booster/releases)
 2. Download the zip for your browser
@@ -53,7 +53,7 @@ You can also just build one target (`chrome`, `firefox`, `safari`, `edge`):
 ```bash
 npm run build:chrome
 ```
-Build ouput goes to `dist/chrome/`.
+Build output goes to `dist/chrome/`.
 
 ## Adding a new AI chat site
 
@@ -92,6 +92,7 @@ Then rebuild. The build script auto-injects the URL patterns into all browser ma
 | ---- | ------ |
 | [ChatGPT](https://chatgpt.com) | ✅ Tested |
 | [Claude](https://claude.ai) | ✅ Tested |
+| [Gemini](https://gemini.google.com) | ✅ Tested |
 
 PRs to add or fix site configs are welcome.
 

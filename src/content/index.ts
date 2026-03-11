@@ -47,10 +47,11 @@ async function bootstrap(): Promise<void> {
 
     if (!config.showStatus) statusIndicator.hide();
 
-    domObserver = new DOMObserver(currentSite.selectors, {
+    domObserver = new DOMObserver(currentSite, {
         onMessagesAdded: handleMessagesAdded,
         onMessagesRemoved: handleMessagesRemoved,
         onConversationChanged: handleConversationChanged,
+        onMessagesReset: handleMessagesReset,
         getLastTrackedMessageId: () => messageManager.getLastTrackedMessageId(),
         hasTrackedMessageId: (id: string) =>
             messageManager.hasTrackedMessageId(id),
@@ -68,7 +69,8 @@ async function bootstrap(): Promise<void> {
         console.log(
             `[AI Chat Speed Booster] Site: ${currentSite.name} | ` +
             `Selector: "${currentSite.selectors.messageTurn}" → ${msgs.length} match(es) | ` +
-            `Scroll container: ${scrollEl ? "found" : "NOT found"}`,
+            `Scroll container: ${scrollEl ? "found" : "NOT found"} | ` +
+            `Is Dynamic: ${currentSite.isDynamic ? "Yes" : "No"}`,
         );
     }, 3000);
 }
@@ -83,6 +85,22 @@ function scheduleInitialScan(): void {
             messageManager.initialise(existing);
             refreshUI();
             logger.info(`initial scan: ${existing.length} messages`);
+            // After hiding old messages, scroll the container to the bottom so
+            // the user always sees the most recent turn.  Only needed for sites
+            // that don't support CSS scroll anchoring (e.g. Gemini's custom
+            // infinite-scroller element).  ChatGPT and Claude manage their own
+            // scroll position and will fight a forced scroll, causing layout
+            // issues or even triggering a full re-render.
+            if (currentSite.isDynamic) {
+                requestAnimationFrame(() => {
+                    const scrollEl = domObserver.findScrollContainer();
+                    if (scrollEl) {
+                        scrollEl.scrollTop = scrollEl.scrollHeight;
+                    } else {
+                        window.scrollTo(0, document.body.scrollHeight);
+                    }
+                });
+            }
             return;
         }
         setTimeout(attempt, 500);
@@ -162,6 +180,22 @@ function handleConfigUpdated(newConfig: ExtensionConfig): void {
     messageManager.updateConfig(config);
     refreshUI();
     logger.debug("config updated from external source");
+}
+
+/**
+ * Resets message manager and UI state when a large batch of messages is added at once, which is a strong signal
+ * that the conversation thread was re-rendered from scratch (e.g. due to a significant navigation or dynamic loading event)
+ * and incremental mutation handling can't keep up with the changes.
+ */
+function handleMessagesReset(): void {
+    logger.debug("large batch detected, re-initialising message manager");
+    messageManager.destroy();
+    loadMoreButton.hide();
+    const messages = domObserver.queryAllMessages();
+    messageManager.initialise(messages);
+    refreshUI();
+    // Do NOT scroll here — the user is actively reading a streaming response.
+    // Any forced scroll would jump away from the content they are watching.
 }
 
 function handleExtensionMessage(message: unknown): ExtensionStatus | undefined {

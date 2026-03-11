@@ -20,7 +20,10 @@ interface ParsedAttr {
  * into { tag: "div", attrName: "data-testid", prefix: "conversation-turn-" }
  */
 function parseMessageSelector(selector: string): ParsedAttr {
-    const tagMatch = selector.match(/^([a-z]+)/i);
+    // Use the first part before any comma (comma-separated compound selectors)
+    const firstPart = selector.split(",")[0].trim();
+    // Match hyphenated custom element names (e.g. user-query, infinite-scroller)
+    const tagMatch = firstPart.match(/^([a-z][a-z0-9-]*)/i);
     const tag = tagMatch ? tagMatch[1] : "div";
 
     const attrMatch = selector.match(/\[([a-z-]+)\^="([^"]+)"\]/i);
@@ -42,6 +45,8 @@ export function getMessageTestAttr(site: SiteConfig): { attr: string; prefix: st
             return { attr: "data-message-id", prefix: "msg-" };
         case "claude":
             return { attr: "data-test-render-count", prefix: "" };
+        case "gemini":
+            return { attr: "data-mock-id", prefix: "msg-" };
         default: {
             const parsed = parseMessageSelector(site.selectors.messageTurn);
             return { attr: parsed.attrName, prefix: parsed.prefix };
@@ -54,7 +59,8 @@ export function getMessageTestAttr(site: SiteConfig): { attr: string; prefix: st
  * Handles: tag, [attr*="val"], [attr^="val"], .class
  */
 function selectorToOpenTag(selector: string): string {
-    const tagMatch = selector.match(/^([a-z]+)/i);
+    // Match hyphenated custom element names (e.g. infinite-scroller)
+    const tagMatch = selector.match(/^([a-z][a-z0-9-]*)/i);
     const tag = tagMatch ? tagMatch[1] : "div";
     const attrs: string[] = [];
 
@@ -98,6 +104,16 @@ function generateMessageHtml(site: SiteConfig, idx: number): string {
                 `        </div>`,
             ].join("\n");
 
+        case "gemini": {
+            // Alternating <user-query> / <model-response> — matches "user-query, model-response"
+            const tag = idx % 2 === 0 ? "user-query" : "model-response";
+            return [
+                `        <${tag} data-mock-id="msg-${idx}">`,
+                `            <p>Mock message ${idx} on ${site.name}</p>`,
+                `        </${tag}>`,
+            ].join("\n");
+        }
+
         default: {
             // Generic fallback using selector parsing
             const parsed = parseMessageSelector(site.selectors.messageTurn);
@@ -126,10 +142,10 @@ export function generateMockPage(site: SiteConfig, messageCount: number): string
         let open = selectorToOpenTag(part);
         // Add data-scroll-root to the innermost scroll container for StatusIndicator
         if (i === containerParts.length - 1) {
-            const tag = open.match(/^<([a-z]+)/i)?.[1] ?? "div";
+            const tag = open.match(/^<([a-z][a-z0-9-]*)/i)?.[1] ?? "div";
             open = open.replace(`<${tag}`, `<${tag} data-scroll-root`);
         }
-        const tag = open.match(/^<([a-z]+)/i)?.[1] ?? "div";
+        const tag = open.match(/^<([a-z][a-z0-9-]*)/i)?.[1] ?? "div";
         wrapped = `    ${open}\n${wrapped}\n    </${tag}>`;
     }
 

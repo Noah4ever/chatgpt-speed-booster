@@ -52,6 +52,7 @@ export interface SiteConfig {
     readonly id: string;
     readonly name: string;
     readonly hostnames: readonly string[];
+    readonly isDynamic?: boolean; // Indicates if the site has dynamic content loading that may require special handling (e.g. Gemini)
     readonly urlPatterns: readonly string[];
     readonly selectors: SiteSelectors;
     readonly messageIdAttribute?: string;

@@ -1,4 +1,4 @@
-import type { SiteSelectors } from "../shared/sites";
+import { SiteConfig, type SiteSelectors } from "../shared/sites";
 import { MUTATION_DEBOUNCE_MS } from "../shared/constants";
 import { logger } from "../shared/logger";
 
@@ -6,6 +6,7 @@ export interface DOMObserverCallbacks {
     onMessagesAdded(elements: HTMLElement[]): void;
     onMessagesRemoved(elements: HTMLElement[]): void;
     onConversationChanged(): void;
+    onMessagesReset(): void;
     getLastTrackedMessageId(): string | null;
     hasTrackedMessageId(id: string): boolean;
 }
@@ -14,13 +15,15 @@ export class DOMObserver {
     private observer: MutationObserver | null = null;
     private debounceTimer: ReturnType<typeof setTimeout> | null = null;
     private pendingMutations: MutationRecord[] = [];
+    private readonly currentSite: SiteConfig;
     private readonly selectors: SiteSelectors;
     private readonly callbacks: DOMObserverCallbacks;
     private lastUrl = "";
     private urlPollTimer: ReturnType<typeof setInterval> | null = null;
 
-    constructor(selectors: SiteSelectors, callbacks: DOMObserverCallbacks) {
-        this.selectors = selectors;
+    constructor(currentSite: SiteConfig, callbacks: DOMObserverCallbacks) {
+        this.currentSite = currentSite;
+        this.selectors = currentSite.selectors;
         this.callbacks = callbacks;
     }
 
@@ -138,7 +141,15 @@ export class DOMObserver {
         // node contained 2+ message turns) caused duplicate change events
         // and race conditions during SPA navigations.
 
-        if (addedMessages.length > 0) {
+        if (addedMessages.length > 2 && this.currentSite.isDynamic) { 
+        // If a large batch of messages is added at once, it's likely a dynamic
+        // loading scenario (e.g. Gemini) where the existing message tracking can get out of sync, so we trigger a full reset to be safe
+
+        // Only apply this heuristic for sites known to have dynamic loading (e.g. Gemini),
+        // to avoid unnecessary resets on more static sites where the existing mutation handling is sufficient
+            logger.debug(`Detected ${addedMessages.length} new messages, triggering full reset`);
+            this.callbacks.onMessagesReset();
+        } else if (addedMessages.length > 0) {
             logger.debug(`${addedMessages.length} message turn(s) added`);
             this.callbacks.onMessagesAdded(addedMessages);
         }

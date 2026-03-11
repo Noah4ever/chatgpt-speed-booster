@@ -81,5 +81,28 @@
                 "keepInitial": 1
             }
         }
+    },
+    {
+        "id": "gemini",
+        "name": "Gemini",
+        "hostnames": [
+            "gemini.google.com"
+        ],
+        "isDynamic": true,
+        "urlPatterns": [
+            "*://gemini.google.com/*"
+        ],
+        "selectors": {
+            "messageTurn": "user-query, model-response",
+            "scrollContainer": "infinite-scroller.chat-history"
+        },
+        "statusAnchors": {
+            "name": "bard-logo",
+            "controls": "div.boqOnegoogleliteOgbOneGoogleBar",
+            "bottom": "div.content-container"
+        },
+        "ui": {
+            "loadMoreMargin": "4px 0"
+        }
     }
 ]
