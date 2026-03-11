@@ -8,7 +8,7 @@ Works on **ChatGPT**, **Claude**, **Gemini**, and any AI chat app you add to the
 
 | Browser | Version | Link |
 | --- | --- | --- |
-| Chrome | v1.0.0 | [chromewebstore](https://chromewebstore.google.com/detail/ai-chat-speed-booster/fgefgkfmapdjjjdekejanelknedclfik) | 
+| Chrome | v1.3.4 | [chromewebstore](https://chromewebstore.google.com/detail/ai-chat-speed-booster/fgefgkfmapdjjjdekejanelknedclfik) | 
 | Firefox | v1.3.4 | [addons.mozilla.org](https://addons.mozilla.org/en-US/firefox/addon/ai-chat-speed-booster/?utm_source=addons.mozilla.org&utm_medium=referral&utm_content=search)
 
 ## Install
