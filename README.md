@@ -190,6 +190,10 @@ The file to load or package is `dist/firefox/manifest.json`.
 
 Build script used by this project: `scripts/build.mjs`
 
+## Credits
+
+Fast Mode in this project uses a fetch-interception approach that trims API responses before the app renders them. Earlier work in this area includes [Speed Booster for ChatGPT](https://chromewebstore.google.com/detail/speed-booster-for-chatgpt/finipiejpmpccemiedioehhpgcafnndo) by BGSN.
+
 ## License
 
 MIT
