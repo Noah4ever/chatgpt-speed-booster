@@ -9,7 +9,7 @@ Works on **ChatGPT**, **Claude**, **Gemini**, and any AI chat app you add to the
 | Browser | Version | Link |
 | --- | --- | --- |
 | Chrome | v1.3.4 | [chromewebstore](https://chromewebstore.google.com/detail/ai-chat-speed-booster/fgefgkfmapdjjjdekejanelknedclfik) | 
-| Firefox | v1.3.4 | [addons.mozilla.org](https://addons.mozilla.org/en-US/firefox/addon/ai-chat-speed-booster/?utm_source=addons.mozilla.org&utm_medium=referral&utm_content=search)
+| Firefox | v1.4.0 | [addons.mozilla.org](https://addons.mozilla.org/en-US/firefox/addon/ai-chat-speed-booster/?utm_source=addons.mozilla.org&utm_medium=referral&utm_content=search)
 
 ## Install
 
@@ -100,8 +100,10 @@ PRs to add or fix site configs are welcome.
 
 - Shows the latest messages first (default: 3)
 - Hides older messages
-- Adds a Load more button at the top to reveal older messages in batches
+- Adds a "Load more" button at the top to reveal older messages in batches
 - Keeps the visible window capped as new messages arrive
+- Caches up to 5 recent chats (LRU) for faster switching
+- Trims chat/API data before rendering to reduce load time and improve responsiveness
 
 ## Settings
 
