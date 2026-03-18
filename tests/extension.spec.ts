@@ -26,7 +26,7 @@ for (const site of SITES) {
     test.describe(`${site.name}`, () => {
         test.describe.configure({ mode: "serial" });
 
-        /* ── helpers ─────────────────────────────────────────────── */
+        /*  helpers  */
 
         function messageLocator(page: import("@playwright/test").Page, index: number) {
             const { attr, prefix } = getMessageTestAttr(site);
@@ -49,7 +49,7 @@ for (const site of SITES) {
             });
         }
 
-        /* ── tests ───────────────────────────────────────────────── */
+        /*  tests  */
 
         test("content script activates and manages messages", async ({ page }) => {
             await loadMockPage(page);

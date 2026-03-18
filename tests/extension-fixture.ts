@@ -11,11 +11,11 @@ import path from "path";
 import { readFileSync, existsSync, cpSync, mkdtempSync } from "fs";
 import os from "os";
 
-/* ── paths ───────────────────────────────────────────────────────── */
+/*  paths  */
 const EXTENSION_PATH = path.resolve("dist", "chrome");
 const AUTH_PROFILE = path.resolve("tests", ".auth-profile");
 
-/* ── site configs (single source of truth) ───────────────────────── */
+/*  site configs (single source of truth)  */
 export interface SiteConfig {
     id: string;
     name: string;
@@ -33,7 +33,7 @@ export const SITES: SiteConfig[] = JSON.parse(
     readFileSync(path.resolve("sites.config.json"), "utf8"),
 );
 
-/* ── fixtures ────────────────────────────────────────────────────── */
+/*  fixtures  */
 
 // Worker-scoped (shared across all tests in a file)
 type WorkerFixtures = {

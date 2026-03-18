@@ -86,6 +86,44 @@ const BYPASS_KEY = "acsb_skip_trim_once";
  */
 const BUFFER_ROUNDS = 10;
 
+/**
+ * In-memory LRU cache for the last N trimmed conversation responses.
+ * Keyed by request URL so SPA navigations between recent chats can be
+ * served instantly without hitting the network.  The cache lives only in
+ * JS memory — a hard page refresh clears it automatically, which is the
+ * desired behaviour (the user expects fresh data on F5).
+ */
+const RESPONSE_CACHE_MAX = 5;
+interface CachedResponse {
+    body: string;
+    trimmed: boolean;
+    status: number;
+    statusText: string;
+    headers: [string, string][];
+    url: string;
+}
+const responseCache = new Map<string, CachedResponse>();
+
+function cachePut(key: string, entry: CachedResponse): void {
+    // Delete first so re-insertion moves key to the end (Map preserves insertion order)
+    responseCache.delete(key);
+    responseCache.set(key, entry);
+    // Evict oldest entries beyond the limit
+    while (responseCache.size > RESPONSE_CACHE_MAX) {
+        const oldest = responseCache.keys().next().value!;
+        responseCache.delete(oldest);
+    }
+}
+
+function cacheGet(key: string): CachedResponse | undefined {
+    const entry = responseCache.get(key);
+    if (!entry) return undefined;
+    // Move to end (most recently used)
+    responseCache.delete(key);
+    responseCache.set(key, entry);
+    return entry;
+}
+
 // ---------------------------------------------------------------------------
 // Bootstrap
 // ---------------------------------------------------------------------------
@@ -130,7 +168,7 @@ const BUFFER_ROUNDS = 10;
             (input instanceof Request ? input.method : "GET")
         ).toUpperCase();
 
-        // ── Fast-path: not a conversation-loading request ──────────────
+        // Fast-path: not a conversation-loading request 
         if (
             method !== ic.method.toUpperCase() ||
             !url.includes(ic.urlMatch)
@@ -142,7 +180,7 @@ const BUFFER_ROUNDS = 10;
             return originalFetch.call(this, input, init);
         }
 
-        // ── Check user settings ────────────────────────────────────────
+        // Check user settings 
         const settings = readSettings();
         if (!settings.enabled || !settings.fetchInterceptEnabled) {
             return originalFetch.call(this, input, init);
@@ -152,6 +190,7 @@ const BUFFER_ROUNDS = 10;
         if (localStorage.getItem(BYPASS_KEY) === "true") {
             localStorage.removeItem(BYPASS_KEY);
             document.documentElement.removeAttribute(TRIMMED_ATTR);
+            responseCache.delete(url);
             if (__DEV__) console.debug(PREFIX, "one-shot bypass active, skipping trim");
             return originalFetch.call(this, input, init);
         }
@@ -168,7 +207,24 @@ const BUFFER_ROUNDS = 10;
         if (__DEV__) console.debug(PREFIX, "intercepting", method, url,
             `(fetchLimit=${fetchLimit})`);
 
-        // ── Fetch & intercept ──────────────────────────────────────────
+        // Cache lookup 
+        const cached = cacheGet(url);
+        if (cached) {
+            if (__DEV__) console.debug(PREFIX, "serving from cache", url);
+            if (cached.trimmed) {
+                document.documentElement.setAttribute(TRIMMED_ATTR, "true");
+            }
+            const headers = new Headers(cached.headers);
+            const cachedRes = new Response(cached.body, {
+                status: cached.status,
+                statusText: cached.statusText,
+                headers,
+            });
+            Object.defineProperty(cachedRes, "url", { value: cached.url });
+            return cachedRes;
+        }
+
+        // Fetch & intercept 
         const response = await originalFetch.call(this, input, init);
         if (!response.ok) return response;
 
@@ -189,22 +245,36 @@ const BUFFER_ROUNDS = 10;
 
             if (!trimmed) {
                 if (__DEV__) console.debug(PREFIX, "no trimming needed");
-                // Do NOT remove TRIMMED_ATTR here.  Multiple GET requests
-                // can match the URL pattern (sub-endpoints, re-fetches, etc.).
-                // If a previous request set the flag, a later non-conversation
-                // response must not erase it.  The content script consumes
-                // and resets the flag on conversation change instead.
+                // Cache the untrimmed response too (small chats that
+                // don't need trimming also benefit from instant reload).
+                cachePut(url, {
+                    body: text,
+                    trimmed: false,
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: [...new Headers(response.headers)],
+                    url: response.url,
+                });
                 return response;
             }
 
             // Signal to the content script that messages were removed.
-            // Uses a DOM attribute on <html> because it's shared instantly
-            // between MAIN and ISOLATED worlds (localStorage is not reliable
-            // for MAIN→ISOLATED communication).
             document.documentElement.setAttribute(TRIMMED_ATTR, "true");
 
-            if (__DEV__) console.debug(PREFIX, "response trimmed successfully");
-            return buildResponse(response, JSON.stringify(trimmed));
+            const trimmedBody = JSON.stringify(trimmed);
+
+            // Cache the trimmed response
+            cachePut(url, {
+                body: trimmedBody,
+                trimmed: true,
+                status: response.status,
+                statusText: response.statusText,
+                headers: [...new Headers(response.headers)],
+                url: response.url,
+            });
+
+            if (__DEV__) console.debug(PREFIX, "response trimmed and cached");
+            return buildResponse(response, trimmedBody);
         } catch (err) {
             if (__DEV__) console.warn(PREFIX, "intercept failed, returning original", err);
             return response;

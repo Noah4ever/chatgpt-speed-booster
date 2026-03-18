@@ -146,14 +146,11 @@ function handleConversationChanged(): void {
     loadMoreButton.hide();
     statusIndicator.hide();
 
-    // Wait for messages to appear in the DOM, then initialise.
-    // We don't compare element references because React may render the new
-    // conversation's messages *before* updating the URL (pushState), which
-    // would make a reference-based "new element" check always fail.
-    // Initialising with stale messages that haven't been unmounted yet is
-    // harmless: they sit at the start of the array and recalculateVisibility
-    // keeps the last N visible, so only the newest messages are shown.
-    // Once React removes the old elements, handleMessagesRemoved cleans them up.
+    // Initialise immediately if messages are already in the DOM (common with
+    // cached fetch responses that return instantly).  Stale messages from the
+    // previous conversation that haven't been unmounted yet are harmless:
+    // they sit at the start of the array and recalculateVisibility keeps the
+    // last N visible.  Once React removes them, handleMessagesRemoved cleans up.
     let retries = 0;
     const maxRetries = 20;
     const attempt = (): void => {
@@ -171,7 +168,9 @@ function handleConversationChanged(): void {
         retries++;
         conversationRetryTimer = setTimeout(attempt, 300);
     };
-    conversationRetryTimer = setTimeout(attempt, 200);
+    // Try immediately — with cached responses messages may already be rendered.
+    // Fall back to polling if the DOM is empty (server fetch still in-flight).
+    attempt();
 }
 
 function handleConfigUpdated(newConfig: ExtensionConfig): void {

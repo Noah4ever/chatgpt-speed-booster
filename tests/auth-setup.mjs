@@ -18,7 +18,7 @@ const EXTENSION_PATH = path.resolve("dist", "chrome");
 const AUTH_DIR = path.resolve("tests", ".auth-profile");
 const sites = JSON.parse(readFileSync("sites.config.json", "utf8"));
 
-/* ── simple .env parser (no dependency) ─────────────────────────── */
+/*  simple .env parser (no dependency)  */
 function loadEnv() {
     const vars = {};
     if (!existsSync(".env")) return vars;
@@ -31,7 +31,7 @@ function loadEnv() {
     return vars;
 }
 
-/* ── best-effort auto-fill ──────────────────────────────────────── */
+/*  best-effort auto-fill  */
 async function tryAutoFill(page, email, password) {
     try {
         // Look for email / username fields
@@ -54,7 +54,7 @@ async function tryAutoFill(page, email, password) {
     } catch { /* auto-fill failed */ }
 }
 
-/* ── main ────────────────────────────────────────────────────────── */
+/*  main  */
 async function main() {
     // Ensure extension is built
     if (!existsSync(EXTENSION_PATH)) {

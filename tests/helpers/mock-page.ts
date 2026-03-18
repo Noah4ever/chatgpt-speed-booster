@@ -7,7 +7,7 @@
  */
 import type { SiteConfig } from "../extension-fixture";
 
-/* ── selector parsing helpers ────────────────────────────────────── */
+/*  selector parsing helpers  */
 
 interface ParsedAttr {
     tag: string;
@@ -81,7 +81,7 @@ function selectorToOpenTag(selector: string): string {
     return `<${tag}${attrs.length ? " " + attrs.join(" ") : ""}>`;
 }
 
-/* ── site-specific message HTML generators ────────────────────────── */
+/*  site-specific message HTML generators  */
 
 function generateMessageHtml(site: SiteConfig, idx: number): string {
     switch (site.id) {
@@ -126,7 +126,7 @@ function generateMessageHtml(site: SiteConfig, idx: number): string {
     }
 }
 
-/* ── mock page generator ─────────────────────────────────────────── */
+/*  mock page generator  */
 
 export function generateMockPage(site: SiteConfig, messageCount: number): string {
     // Build message elements using site-specific templates

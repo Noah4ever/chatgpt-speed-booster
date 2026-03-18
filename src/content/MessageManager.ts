@@ -128,6 +128,7 @@ export class MessageManager {
     }
 
     private recalculateVisibility(): void {
+        injectHideStyle();
         if (!this.config.enabled) {
             for (const msg of this.messages) this.showMessage(msg);
             return;
