@@ -61,7 +61,7 @@ for (const browser of BROWSERS) {
                 readFileSync(path.join(distDir, "manifest.json"), "utf8"),
             );
             expect(manifest.permissions).toContain("storage");
-            expect(manifest.permissions).toContain("tabs");
+            expect(manifest.permissions).not.toContain("tabs");
         });
 
         if (browser === "firefox") {
